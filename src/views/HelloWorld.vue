@@ -12,6 +12,7 @@
             <el-button size="medium" @click="rotation">旋转</el-button>
             <el-button size="medium" @click="translation">平移</el-button>
             <el-button size="medium" @click="destroy">关闭编辑</el-button>
+            <el-button size="medium" @click="imageProperty">图片轨迹线</el-button>
         </div>
         <div id="cesiumContainer"></div>
     </div>
@@ -23,6 +24,7 @@ import "cesium/Source/Widgets/widgets.css"
 import initCesium from "@/cesiumUtils/initCesium"
 import { onMounted } from "vue";
 import EditB3DM from "@/cesiumUtils/EditB3DM"
+import PolylineImageTrailMaterialProperty from "@/cesiumUtils/ImageMaterial"
 let viewer = null;
 let tilesetModel = null
 let b3dm = null;
@@ -33,7 +35,7 @@ onMounted(async () => {
         url: "/3dtiles/data/tileset.json"
     });
     viewer.scene.primitives.add(tilesetModel);
-    viewer.flyTo(tilesetModel)
+    // viewer.flyTo(tilesetModel)
 })
 const editObj = () => {
     b3dm = new EditB3DM(viewer, tilesetModel, 1, 1)
@@ -47,6 +49,28 @@ const translation = () => {
 }
 const destroy = () => {
     b3dm.destroy()
+}
+const imageProperty = () => {
+    viewer.entities.add({
+        polyline: {
+            clampToGround: true,
+            //轨迹线的分布位置
+            positions: Cesium.Cartesian3.fromDegreesArray([
+                137, 36, 138, 36, 138, 37, 137, 37, 137, 38, 138, 38
+            ]),
+            material: new PolylineImageTrailMaterialProperty({
+                //图片的颜色
+                color: Cesium.Color.RED,
+                //轨迹运行的速率
+                speed: 10,
+                //随意一张图片
+                image: require("@/assets/smile.jpg"),
+                //将轨迹分成一行50个图片
+                repeat: { x: 40, y: 1 },
+            }),
+            width: 20,
+        }
+    })
 }
 
 
@@ -88,5 +112,3 @@ const destroy = () => {
     z-index: 10;
 }
 </style>
-
-@/cesiumUtils/EditB3DM
