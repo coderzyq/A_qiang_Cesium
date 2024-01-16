@@ -14,12 +14,29 @@
  */
 import { createRouter, createWebHistory } from "vue-router";
 import HelloWorld from "../views/HelloWorld.vue";
+import TilesetVue from "@/views/Tileset.vue";
+import DynamicImageVue from "@/views/DynamicImage.vue";
 
 const routes = [
   {
     path: "/",
     name: "index",
     component: HelloWorld,
+    alias: "/index"
+  },
+  // {
+  //   path: "/home",
+  //   redirect: "/",
+  // },
+  {
+    path: "/3dtiles",
+    name: "3dtiles",
+    component: TilesetVue,
+  },
+  {
+    path: "/dynamicImage",
+    name: "dynamicImage",
+    component: DynamicImageVue,
   },
   // {
   //   path: "/about",

@@ -8,9 +8,10 @@
 <template>
     <div>
         <div class="edit">
-            <Panel></Panel>
-            <!-- <el-button size="medium" @click="addModel">模型操作</el-button>
-            <el-button size="medium" @click="addImageTrail">图片轨迹线</el-button> -->
+            <el-button size="medium" @click="editObj">开始编辑</el-button>
+            <el-button size="medium" @click="rotation">旋转</el-button>
+            <el-button size="medium" @click="translation">平移</el-button>
+            <el-button size="medium" @click="destroy">关闭编辑</el-button>
         </div>
         <div id="cesiumContainer"></div>
     </div>
@@ -20,26 +21,35 @@
 import * as Cesium from "cesium"
 import "cesium/Source/Widgets/widgets.css"
 import initCesium from "@/cesiumUtils/initCesium"
-import Panel from "./Panel.vue";
 import { onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import EditB3DM from "@/cesiumUtils/EditB3DM"
 let viewer = null;
-const router = useRouter()
-const route = useRoute()
+let tilesetModel = null
+let b3dm = null;
 //生命周期钩子
 onMounted(async () => {
     viewer = await initCesium("cesiumContainer");
+    tilesetModel = new Cesium.Cesium3DTileset({
+        url: "/3dtiles/data/tileset.json"
+    });
+    viewer.scene.primitives.add(tilesetModel);
+    
 })
-const addModel = () => {
-    router.push({
-        name: "3dtiles"
-    })
+const editObj = () => {
+    viewer.flyTo(tilesetModel)
+    b3dm = new EditB3DM(viewer, tilesetModel, 1, 1)
+    return b3dm
 }
-const addImageTrail = () => {
-    router.push({
-        name: "dynamicImage"
-    })
+const rotation = () => {
+    b3dm.editRtation()
 }
+const translation = () => {
+    b3dm.editTranslation()
+}
+const destroy = () => {
+    b3dm.destroy()
+}
+
 
 </script>
 
@@ -52,7 +62,6 @@ const addImageTrail = () => {
     overflow: hidden;
     position: relative;
 }
-
 .dynamic-trail-tools {
     position: absolute;
     border: 1px solid rgb(31, 30, 30);
@@ -62,7 +71,6 @@ const addImageTrail = () => {
     margin: 10px;
     padding: 10px;
 }
-
 .edit {
     position: absolute;
     top: 10px;

@@ -8,9 +8,7 @@
 <template>
     <div>
         <div class="edit">
-            <Panel></Panel>
-            <!-- <el-button size="medium" @click="addModel">模型操作</el-button>
-            <el-button size="medium" @click="addImageTrail">图片轨迹线</el-button> -->
+            <el-button size="medium" @click="imageProperty">图片轨迹线</el-button>
         </div>
         <div id="cesiumContainer"></div>
     </div>
@@ -20,26 +18,36 @@
 import * as Cesium from "cesium"
 import "cesium/Source/Widgets/widgets.css"
 import initCesium from "@/cesiumUtils/initCesium"
-import Panel from "./Panel.vue";
 import { onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import PolylineImageTrailMaterialProperty from "@/cesiumUtils/ImageMaterial"
 let viewer = null;
-const router = useRouter()
-const route = useRoute()
 //生命周期钩子
 onMounted(async () => {
     viewer = await initCesium("cesiumContainer");
 })
-const addModel = () => {
-    router.push({
-        name: "3dtiles"
+const imageProperty = () => {
+    viewer.entities.add({
+        polyline: {
+            clampToGround: true,
+            //轨迹线的分布位置
+            positions: Cesium.Cartesian3.fromDegreesArray([
+                137, 36, 138, 36, 138, 37, 137, 37, 137, 38, 138, 38
+            ]),
+            material: new PolylineImageTrailMaterialProperty({
+                //图片的颜色
+                color: Cesium.Color.RED,
+                //轨迹运行的速率
+                speed: 10,
+                //随意一张图片
+                image: require("@/assets/smile.jpg"),
+                //将轨迹分成一行50个图片
+                repeat: { x: 40, y: 1 },
+            }),
+            width: 20,
+        }
     })
 }
-const addImageTrail = () => {
-    router.push({
-        name: "dynamicImage"
-    })
-}
+
 
 </script>
 
@@ -52,7 +60,6 @@ const addImageTrail = () => {
     overflow: hidden;
     position: relative;
 }
-
 .dynamic-trail-tools {
     position: absolute;
     border: 1px solid rgb(31, 30, 30);
@@ -62,7 +69,6 @@ const addImageTrail = () => {
     margin: 10px;
     padding: 10px;
 }
-
 .edit {
     position: absolute;
     top: 10px;
