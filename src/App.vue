@@ -8,11 +8,32 @@
 <template>
   <div>
     <HelloWorld/>
+    <router-link :to="link" />
   </div>
 </template>
 
 <script setup>
 import HelloWorld from "@/views/HelloWorld.vue";
+import { useStore } from "vuex"
+import {ref, reactive, watch} from 'vue';
+import { useRouter, useRoute } from "vue-router";
+const router = useRouter()
+const route = useRoute()
+const store = useStore()
+const link = ref("index")
+router.push({
+  path: link.value
+})
+//监听
+watch(
+  () => store.getters.format,
+  (newval) => {
+    router.push({
+      path: newval
+    })
+  }
+)
+
 </script>
 <style lang="less">
 * {

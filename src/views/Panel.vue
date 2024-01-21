@@ -88,19 +88,19 @@
 </template>
 
 <script setup>
-const emit = defineEmits(["changeRouter"])
+const emit = defineEmits(["addTiles"])
 import { ref } from 'vue'
+import { useStore, mapState } from "vuex"
+const store = useStore()
 const activeNames = ref(['1'])
 const handleChange = (val) => {
-  console.log(val)
   if (val) {
-    emit("changeRouter", val)
-    
+    store.commit("EXCHANGE_LINK", val)
   } else {
   }
 }
 const addTiles = () => {
-
+  emit("addTiles")
 }
 const rotation = () => {
 

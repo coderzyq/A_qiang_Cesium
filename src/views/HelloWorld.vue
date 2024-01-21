@@ -8,26 +8,17 @@
 <template>
     <div>
         <div class="edit">
-            <Panel @changeRouter="changeRouter"></Panel>
+            <Panel @addTiles="addTiles"></Panel>
         </div>
         <cesiumViewer />
-        <router-link :to="key" />
     </div>
 </template>
 
 <script setup>
 import Panel from "@/views/Panel.vue";
 import cesiumViewer from "@/views/cesiumViewer.vue";
-import { ref } from "vue"
-import { useRouter, useRoute } from "vue-router";
-const router = useRouter()
-const route = useRoute()
-const key = ref("")
-const changeRouter = (path) => {
-    console.log("changeRouter", path);
-    key.value = path
-    router.push({ path })
-    console.log(route);
+const addTiles = () => {
+    console.log("addTiles");
 }
 </script>
 <style lang="less">

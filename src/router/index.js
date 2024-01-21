@@ -25,6 +25,7 @@ const routes = [
   {
     path: "/",
     redirect: "/index",
+    component: cesiumViewer
   },
   {
     path: "/3dtiles",
