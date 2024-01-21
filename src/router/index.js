@@ -13,30 +13,53 @@
  * @LastEditors: coderqiang
  */
 import { createRouter, createWebHistory } from "vue-router";
-import HelloWorld from "../views/HelloWorld.vue";
-import TilesetVue from "@/views/Tileset.vue";
-import DynamicImageVue from "@/views/DynamicImage.vue";
+import cesiumViewer from "@/views/cesiumViewer.vue";
 
 const routes = [
   {
     path: "/",
     name: "index",
-    component: HelloWorld,
-    alias: "/index"
+    component: cesiumViewer,
+    alias: "/index",
   },
-  // {
-  //   path: "/home",
-  //   redirect: "/",
-  // },
+  {
+    path: "/",
+    redirect: "/index",
+  },
   {
     path: "/3dtiles",
     name: "3dtiles",
-    component: TilesetVue,
+    component: cesiumViewer,
   },
   {
-    path: "/dynamicImage",
-    name: "dynamicImage",
-    component: DynamicImageVue,
+    path: "/imageTrail",
+    name: "imageTrail",
+    component: cesiumViewer,
+  },
+  {
+    path: "/2dEffect",
+    name: "2dEffect",
+    component: cesiumViewer,
+  },
+  {
+    path: "/3dEffect",
+    name: "3dEffect",
+    component: cesiumViewer,
+  },
+  {
+    path: "/geoAnalysis",
+    name: "geoAnalysis",
+    component: cesiumViewer,
+  },
+  {
+    path: "/weaterEffect",
+    name: "weaterEffect",
+    component: cesiumViewer,
+  },
+  {
+    path: "/particleSystem",
+    name: "particleSystem",
+    component: cesiumViewer,
   },
   // {
   //   path: "/about",

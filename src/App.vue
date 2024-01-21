@@ -1,14 +1,19 @@
 <!--
  * @Description: 'App.vue入口文件'
- * @Author: coderqiang
+ * @Author: A_qiang
  * @Date: 2023-06-06 21:17:52
- * @LastEditTime: 2023-06-07 21:44:02
- * @LastEditors: coderqiang
+ * @LastEditTime: 2023-01-21 19:14:02
+ * @LastEditors: A_qiang
 -->
 <template>
-  <router-view />
+  <div>
+    <HelloWorld/>
+  </div>
 </template>
 
+<script setup>
+import HelloWorld from "@/views/HelloWorld.vue";
+</script>
 <style lang="less">
 * {
   margin: 0;

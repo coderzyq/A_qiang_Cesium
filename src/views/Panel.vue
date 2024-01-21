@@ -3,15 +3,12 @@
     <el-collapse v-model="activeNames" @change="handleChange" accordion>
       <el-collapse-item title="操作3dtiles" name="3dtiles">
         <div class="effect">
-          <!-- <el-button size="default" @click="addModel">开始编辑</el-button>
+          <el-button size="default" @click="addTiles">开始编辑</el-button>
           <el-button size="default" @click="rotation">旋转</el-button>
-          <el-button size="default" @click="transition">平移</el-button> -->
-          <el-button size="default" >开始编辑</el-button>
-            <el-button size="default" >旋转</el-button>
-            <el-button size="default">平移</el-button>
+          <el-button size="default" @click="transition">平移</el-button>
         </div>
         <div class="effect">
-          <el-button size="default" @click="removeModel">关闭编辑</el-button>
+          <el-button size="default" @click="destroyTiles">关闭编辑</el-button>
         </div>
       </el-collapse-item>
       <el-collapse-item title="动态轨迹线" name="imageTrail">
@@ -91,19 +88,36 @@
 </template>
 
 <script setup>
+const emit = defineEmits(["changeRouter"])
 import { ref } from 'vue'
-import { useRouter, useRoute } from "vue-router";
-const router = useRouter()
-const route = useRoute()
 const activeNames = ref(['1'])
 const handleChange = (val) => {
   console.log(val)
   if (val) {
-    router.push({ val })
+    emit("changeRouter", val)
+    
   } else {
-
   }
 }
+const addTiles = () => {
+
+}
+const rotation = () => {
+
+}
+const transition = () => {
+
+}
+const destroyTiles = () => {
+
+}
+const addImageTrail = () => {
+
+}
+const removeImageTrail = () => {
+
+}
+
 const valueStep = ref(0)
 </script>
 
@@ -137,9 +151,11 @@ const valueStep = ref(0)
   background-color: @backgroundColor !important;
   max-width: @maxWidth;
   min-width: @minWidth;
+  border-radius: 25px;
 }
 
 ::v-deep .el-collapse-item__header {
+  border-radius: 5px;
   color: @color;
   background-color: @backgroundColor !important;
   font-size: 16px;

@@ -1,83 +1,42 @@
 <!--
- * @Description: cesium组件
- * @Author: coderqiang
- * @Date: 2023-06-06 21:23:53
- * @LastEditTime: 2023-08-21 22:40:47
- * @LastEditors: coderqiang
+ * @Description: 
+ * @Author: A_qiang
+ * @Date: 2023-06-06 21:17:52
+ * @LastEditTime: 2023-01-21 19:14:02
+ * @LastEditors: A_qiang
 -->
 <template>
     <div>
         <div class="edit">
-            <Panel></Panel>
-            <!-- <el-button size="medium" @click="addModel">模型操作</el-button>
-            <el-button size="medium" @click="addImageTrail">图片轨迹线</el-button> -->
+            <Panel @changeRouter="changeRouter"></Panel>
         </div>
-        <div id="cesiumContainer"></div>
+        <cesiumViewer />
+        <router-link :to="key" />
     </div>
 </template>
 
 <script setup>
-import * as Cesium from "cesium"
-import "cesium/Source/Widgets/widgets.css"
-import initCesium from "@/cesiumUtils/initCesium"
-import Panel from "./Panel.vue";
-import { onMounted } from "vue";
+import Panel from "@/views/Panel.vue";
+import cesiumViewer from "@/views/cesiumViewer.vue";
+import { ref } from "vue"
 import { useRouter, useRoute } from "vue-router";
-let viewer = null;
 const router = useRouter()
 const route = useRoute()
-//生命周期钩子
-onMounted(async () => {
-    viewer = await initCesium("cesiumContainer");
-})
-const addModel = () => {
-    router.push({
-        name: "3dtiles"
-    })
+const key = ref("")
+const changeRouter = (path) => {
+    console.log("changeRouter", path);
+    key.value = path
+    router.push({ path })
+    console.log(route);
 }
-const addImageTrail = () => {
-    router.push({
-        name: "dynamicImage"
-    })
-}
-
 </script>
-
-<style lang="less" scoped>
-#cesiumContainer {
-    width: 100vw;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    position: relative;
-}
-
-.dynamic-trail-tools {
-    position: absolute;
-    border: 1px solid rgb(31, 30, 30);
-    border-radius: 5px;
-    background-color: rgba(66, 65, 66, 0.8);
-    z-index: 9999;
-    margin: 10px;
-    padding: 10px;
-}
-
+<style lang="less">
 .edit {
     position: absolute;
     top: 10px;
     left: 10px;
     padding: 10px;
     z-index: 1;
-}
-
-.plotting-tool {
-    position: absolute;
-    margin: 10px;
-    padding: 10px;
-    border: 1px solid rgb(39, 38, 38);
     border-radius: 5px;
-    background-color: rgba(66, 65, 66, 0.8);
-    z-index: 10;
 }
 </style>
