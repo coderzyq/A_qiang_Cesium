@@ -7,13 +7,13 @@
 -->
 <template>
   <div>
-    <HelloWorld/>
+    <cesiumViewer/>
     <router-link :to="link" />
   </div>
 </template>
 
 <script setup>
-import HelloWorld from "@/views/HelloWorld.vue";
+import cesiumViewer from "@/views/CesiumViewer.vue";
 import { useStore } from "vuex"
 import {ref, reactive, watch} from 'vue';
 import { useRouter, useRoute } from "vue-router";
