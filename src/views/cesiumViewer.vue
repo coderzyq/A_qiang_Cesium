@@ -20,6 +20,7 @@ import * as Cesium from "cesium"
 import "cesium/Source/Widgets/widgets.css"
 import initCesium from "@/cesiumUtils/initCesium"
 import EditB3DM from "@/cesiumUtils/EditB3DM";
+import PolylineImageTrailMaterialProperty from "@/cesiumUtils/ImageMaterial"
 
 let viewer = null;
 let tilesetModel = null
@@ -32,8 +33,33 @@ onMounted(async () => {
 })
 const dialogVisible = ref(false);
 let editB3dm = null
+let trailPolyline = null
+const imageProperty = () => {
+    trailPolyline = viewer.entities.add({
+        polyline: {
+            clampToGround: true,
+            //轨迹线的分布位置
+            positions: Cesium.Cartesian3.fromDegreesArray([
+                137, 36, 138, 36, 138, 37, 137, 37, 137, 38, 138, 38
+            ]),
+            material: new PolylineImageTrailMaterialProperty({
+                //图片的颜色
+                color: Cesium.Color.RED,
+                //轨迹运行的速率
+                speed: 10,
+                //随意一张图片
+                image: require("@/assets/smile.jpg"),
+                //将轨迹分成一行50个图片
+                repeat: { x: 40, y: 1 },
+            }),
+            width: 20,
+        }
+    })
+    return trailPolyline
+}
 const btnClick = (params) => {
     const { id, step } = params;
+    console.log(id, step);
     switch (id) {
         case "initTiles":
             viewer.flyTo(tilesetModel)
@@ -48,6 +74,15 @@ const btnClick = (params) => {
         case "destroyTiles":
             editB3dm.destroy()
             break;
+        case "dynamcTrail":
+            trailPolyline = imageProperty()
+            viewer.camera.flyTo({
+                destination: Cesium.Rectangle.fromDegrees(135, 35, 139, 40)
+            })
+            break;
+        case "removeTrail":
+            viewer.entities.remove(trailPolyline)
+            break
     }
 }
 </script>
