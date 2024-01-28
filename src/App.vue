@@ -13,10 +13,10 @@
 </template>
 
 <script setup>
-import cesiumViewer from "@/views/CesiumViewer.vue";
 import { useStore } from "vuex"
-import {ref, reactive, watch} from 'vue';
+import {ref, watch} from 'vue';
 import { useRouter, useRoute } from "vue-router";
+import cesiumViewer from "@/views/CesiumViewer.vue";
 const router = useRouter()
 const route = useRoute()
 const store = useStore()
