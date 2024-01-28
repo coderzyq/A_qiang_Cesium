@@ -21,7 +21,7 @@ import "cesium/Source/Widgets/widgets.css"
 import initCesium from "@/cesiumUtils/initCesium"
 import EditB3DM from "@/cesiumUtils/EditB3DM";
 import PolylineImageTrailMaterialProperty from "@/cesiumUtils/ImageMaterial"
-
+import DynamicMaskEllipsoid from "@/material/dynamicMaskEllipsoid"
 let viewer = null;
 let tilesetModel = null
 onMounted(async () => {
@@ -34,7 +34,8 @@ onMounted(async () => {
 const dialogVisible = ref(false);
 let editB3dm = null
 let trailPolyline = null
-const imageProperty = () => {
+//动态轨迹线（图片）
+const imageProperty = (viewer) => {
     trailPolyline = viewer.entities.add({
         polyline: {
             clampToGround: true,
@@ -57,6 +58,20 @@ const imageProperty = () => {
     })
     return trailPolyline
 }
+// 动态遮罩球
+const maskMaterialEllipsoid = (viewer) => {
+    viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
+        ellipsoid: {
+            radii: new Cesium.Cartesian3(50000.0, 50000.0, 50000.0),
+            material: new DynamicMaskEllipsoid({
+                color: new Cesium.Color(1, 0, 0, 1),
+                speed: 5.0,
+            })
+        }
+    })
+    viewer.flyTo(viewer.entities)
+}
 const btnClick = (params) => {
     const { id, step } = params;
     console.log(id, step);
@@ -75,14 +90,19 @@ const btnClick = (params) => {
             editB3dm.destroy()
             break;
         case "dynamcTrail":
-            trailPolyline = imageProperty()
+            trailPolyline = imageProperty(viewer)
             viewer.camera.flyTo({
                 destination: Cesium.Rectangle.fromDegrees(135, 35, 139, 40)
             })
             break;
         case "removeTrail":
             viewer.entities.remove(trailPolyline)
-            break
+            break;
+        case "electricMaterialEllipsoid":
+            break;
+        case "maskMaterialEllipsoid":
+            maskMaterialEllipsoid(viewer)
+            break;
     }
 }
 </script>
@@ -100,3 +120,4 @@ const btnClick = (params) => {
     }
 }
 </style>
+@/material/dynamicMaskEllipsoid

@@ -85,8 +85,8 @@ const btns = reactive([
     label: "三维特效",
     name: "3dEffect",
     contents: [
-      { id: "scanCircle", label: "电弧球" },
-      { id: "scanRadar", label: "扫描圆" },
+      { id: "electricMaterialEllipsoid", label: "电弧球" },
+      { id: "maskMaterialEllipsoid", label: "遮罩球" },
       { id: "expandCircle", label: "三维雷达" },
       { id: "breathCircle", label: "呼吸圆" },
       { id: "disappearCircle", label: "消隐圆" },
