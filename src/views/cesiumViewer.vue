@@ -14,23 +14,48 @@
 
 <script setup>
 import { ref } from "vue"
+import { onMounted } from "vue";
 import Panel from "@/views/Panel.vue";
+import * as Cesium from "cesium"
 import "cesium/Source/Widgets/widgets.css"
 import initCesium from "@/cesiumUtils/initCesium"
-import { onMounted } from "vue";
+import EditB3DM from "@/cesiumUtils/EditB3DM";
+
 let viewer = null;
+let tilesetModel = null
 onMounted(async () => {
     viewer = await initCesium("cesiumContainer");
+    tilesetModel  = new Cesium.Cesium3DTileset({
+        url: "/3dtiles/data/tileset.json"
+    });
+    viewer.scene.primitives.add(tilesetModel);
 })
 const dialogVisible = ref(false);
-const btnClick = (id) => {
-    console.log("initCesium", id);
+let editB3dm = null
+const btnClick = (params) => {
+    const { id, step } = params;
+    switch (id) {
+        case "initTiles":
+            viewer.flyTo(tilesetModel)
+            editB3dm = new EditB3DM(viewer, tilesetModel, 1, 1)
+            break;
+        case "rotation":
+            editB3dm.editRotation()
+            break;
+        case "transition":
+            editB3dm.editTranslation()
+            break;
+        case "destroyTiles":
+            editB3dm.destroy()
+            break;
+    }
 }
 </script>
 <style lang="less">
 #container {
     width: 100vw;
     height: 100vh;
+
     #cesiumContainer {
         width: 100vw;
         height: 100vh;

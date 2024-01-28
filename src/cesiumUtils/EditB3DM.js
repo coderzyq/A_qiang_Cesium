@@ -10,7 +10,7 @@
 */
 import * as Cesium from "cesium";
 import CoordTransform from "@/cesiumUtils/coordinate/CoordTransform"
- 
+
 class EditB3DM {
   /**
    * 3dtiles模型编辑
@@ -64,7 +64,7 @@ class EditB3DM {
   /**
    * 开始旋转编辑
    */
-  editRtation() {
+  editRotation() {
     const option = this.initParam();
     //绘制旋转指示器
     this.createCircle(
