@@ -1,19 +1,5 @@
-/*
- * @Description:
- * @Author: coderqiang
- * @Date: 2023-06-06 21:17:52
- * @LastEditTime: 2023-06-06 21:33:26
- * @LastEditors: coderqiang
- */
-/*
- * @Description:
- * @Author: coderqiang
- * @Date: 2023-06-06 21:17:52
- * @LastEditTime: 2023-06-06 21:23:05
- * @LastEditors: coderqiang
- */
 import { createRouter, createWebHistory } from "vue-router";
-import cesiumViewer from "@/views/cesiumViewer.vue";
+import cesiumViewer from "@/views/CesiumViewer.vue";
 
 const routes = [
   {
@@ -25,7 +11,7 @@ const routes = [
   {
     path: "/",
     redirect: "/index",
-    component: cesiumViewer
+    component: cesiumViewer,
   },
   {
     path: "/3dtiles",
