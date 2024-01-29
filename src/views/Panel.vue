@@ -94,6 +94,15 @@ const btns = reactive([
     ]
   },
   {
+    label: "无人机漫游",
+    name: "uavRoamingFly",
+    contents: [
+      { id: "startRoaming", label: "开始漫游" },
+      { id: "pauseRoaming", label: "暂停漫游" },
+      { id: "cancelRoaming", label: "取消漫游" },
+    ]
+  },
+  {
     label: "地理分析",
     name: "geoAnalysis",
     contents: [

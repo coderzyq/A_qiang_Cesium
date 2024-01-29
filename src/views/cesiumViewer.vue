@@ -22,11 +22,12 @@ import initCesium from "@/cesiumUtils/initCesium"
 import EditB3DM from "@/cesiumUtils/EditB3DM";
 import PolylineImageTrailMaterialProperty from "@/cesiumUtils/ImageMaterial"
 import DynamicMaskEllipsoid from "@/material/dynamicMaskEllipsoid"
+import ElectricMaterialProperty4Ellipsoid from "@/material/electricMaterialProperty4Ellipsoid"
 let viewer = null;
 let tilesetModel = null
 onMounted(async () => {
     viewer = await initCesium("cesiumContainer");
-    tilesetModel  = new Cesium.Cesium3DTileset({
+    tilesetModel = new Cesium.Cesium3DTileset({
         url: "/3dtiles/data/tileset.json"
     });
     viewer.scene.primitives.add(tilesetModel);
@@ -72,6 +73,25 @@ const maskMaterialEllipsoid = (viewer) => {
     })
     viewer.flyTo(viewer.entities)
 }
+//电弧球
+const electricMaterialProperty4Ellipsoid = (viewer) => {
+    const newColor = Cesium.Color.fromRandom()
+    let color = newColor.withAlpha(1)
+    const electricEntity = viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
+        ellipsoid: {
+            radii: new Cesium.Cartesian3(100000.0, 100000.0, 100000.0),
+            material: new ElectricMaterialProperty4Ellipsoid({
+                color: new Cesium.CallbackProperty(() => {
+                    return color
+                }, false),
+                // color: new Cesium.Color(1, 0, 0, 1),
+                speed: 5.0,
+            })
+        }
+    })
+    viewer.flyTo(electricEntity)
+}
 const btnClick = (params) => {
     const { id, step } = params;
     console.log(id, step);
@@ -99,9 +119,13 @@ const btnClick = (params) => {
             viewer.entities.remove(trailPolyline)
             break;
         case "electricMaterialEllipsoid":
+            electricMaterialProperty4Ellipsoid(viewer)
             break;
         case "maskMaterialEllipsoid":
             maskMaterialEllipsoid(viewer)
+            break;
+        case "removeEffect":
+            viewer.entities.removeAll()
             break;
     }
 }
@@ -120,4 +144,3 @@ const btnClick = (params) => {
     }
 }
 </style>
-@/material/dynamicMaskEllipsoid
