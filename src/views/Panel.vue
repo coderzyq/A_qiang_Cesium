@@ -87,7 +87,7 @@ const btns = reactive([
     contents: [
       { id: "electricMaterialEllipsoid", label: "电弧球" },
       { id: "maskMaterialEllipsoid", label: "遮罩球" },
-      { id: "expandCircle", label: "三维雷达" },
+      { id: "3dScanRadar", label: "三维雷达" },
       { id: "breathCircle", label: "呼吸圆" },
       { id: "disappearCircle", label: "消隐圆" },
       { id: "removeEffect", label: "清除效果" }

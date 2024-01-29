@@ -21,6 +21,7 @@ import "cesium/Source/Widgets/widgets.css"
 import initCesium from "@/cesiumUtils/initCesium"
 import EditB3DM from "@/cesiumUtils/EditB3DM";
 import PolylineImageTrailMaterialProperty from "@/cesiumUtils/ImageMaterial"
+import ScanRadar from "@/cesiumUtils/scanRadar"
 import DynamicMaskEllipsoid from "@/material/dynamicMaskEllipsoid"
 import ElectricMaterialProperty4Ellipsoid from "@/material/electricMaterialProperty4Ellipsoid"
 let viewer = null;
@@ -92,6 +93,19 @@ const electricMaterialProperty4Ellipsoid = (viewer) => {
     })
     viewer.flyTo(electricEntity)
 }
+//三维雷达
+//使用方式
+const scanRadar = (viewer) => {
+    const radarEntity = new ScanRadar({
+        viewer: viewer,
+        position: { lng: 117, lat: 37, height: 0 },
+        radius: 2000.0,
+        colorEllipsoid: { ellipsoid: "#FF1493", alpha: 0.4 },
+        colorWall: { wall: "#0000FF", alpha: 1 },
+        speed: 1.0,
+    })
+    viewer.flyTo(radarEntity)
+};
 const btnClick = (params) => {
     const { id, step } = params;
     console.log(id, step);
@@ -123,6 +137,9 @@ const btnClick = (params) => {
             break;
         case "maskMaterialEllipsoid":
             maskMaterialEllipsoid(viewer)
+            break;
+        case "3dScanRadar":
+            scanRadar(viewer);
             break;
         case "removeEffect":
             viewer.entities.removeAll()
