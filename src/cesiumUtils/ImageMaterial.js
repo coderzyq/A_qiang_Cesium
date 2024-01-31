@@ -1,9 +1,4 @@
-/*
- * @Author: Wang jianLei
- * @Date: 2022-10-14 14:27:58
- * @Last Modified by: Wang JianLei
- * @Last Modified time: 2022-10-14 14:28:28
- */
+
 // const Cesium = window.Cesium;
 import * as Cesium from "cesium";
 import MaterialProperty from "./MaterialProperty";
