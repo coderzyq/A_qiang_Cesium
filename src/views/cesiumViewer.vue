@@ -7,7 +7,8 @@
 -->
 <template>
     <div id="container">
-        <div id="cesiumContainer"></div>
+        <div id="cesiumContainer" ref="viewerRef"></div>
+            <div id="cesiumContainer1" ref="viewer1Ref"></div>
         <Panel v-model:visible="dialogVisible" @btnClick="btnClick"></Panel>
     </div>
 </template>
@@ -22,12 +23,15 @@ import initCesium from "@/cesiumUtils/initCesium"
 import EditB3DM from "@/cesiumUtils/EditB3DM";
 import PolylineImageTrailMaterialProperty from "@/cesiumUtils/ImageMaterial"
 import ScanRadar from "@/cesiumUtils/scanRadar"
+import SyncViewer from "@/cesiumUtils/splitViewer"
 import DynamicMaskEllipsoid from "@/material/dynamicMaskEllipsoid"
 import ElectricMaterialProperty4Ellipsoid from "@/material/electricMaterialProperty4Ellipsoid"
 let viewer = null;
+let viewer1 = null;
 let tilesetModel = null
 onMounted(async () => {
     viewer = await initCesium("cesiumContainer");
+    viewer1 = await initCesium("cesiumContainer1");
     tilesetModel = new Cesium.Cesium3DTileset({
         url: "/3dtiles/data/tileset.json"
     });
@@ -94,7 +98,6 @@ const electricMaterialProperty4Ellipsoid = (viewer) => {
     viewer.flyTo(electricEntity)
 }
 //三维雷达
-//使用方式
 const scanRadar = (viewer) => {
     const radarEntity = new ScanRadar({
         viewer: viewer,
@@ -106,10 +109,28 @@ const scanRadar = (viewer) => {
     })
     viewer.flyTo(radarEntity)
 };
+//分屏联动
+let syncViewer = null
+const viewerRef = ref(null)
+const viewer1Ref = ref(null) 
 const btnClick = (params) => {
     const { id, step } = params;
     console.log(id, step);
     switch (id) {
+        case "startSync": 
+            syncViewer ? syncViewer = syncViewer: syncViewer =new SyncViewer(viewer, viewer1)
+            viewerRef.value.style.transition = "width .5s ease-in-out"
+            viewerRef.value.style.width = "50vw"
+            viewer1Ref.value.style.transition = "width .5s ease-in-out"
+            viewer1Ref.value.style.width = "50vw"
+            syncViewer.sync(true)
+            break
+        case "cancelSync":
+            viewerRef.value.style.transition = "width .5s ease-in-out"
+            viewerRef.value.style.width = "100vw"
+            viewer1Ref.value.style.width = "0vw"
+            syncViewer.sync(false)
+            break
         case "initTiles":
             viewer.flyTo(tilesetModel)
             editB3dm = new EditB3DM(viewer, tilesetModel, 1, 1)
@@ -151,13 +172,18 @@ const btnClick = (params) => {
 #container {
     width: 100vw;
     height: 100vh;
-
+    display: flex;
+    position: relative;
     #cesiumContainer {
         width: 100vw;
         height: 100vh;
-        margin: 0;
-        padding: 0;
         overflow: hidden;
+        display: inline-block;
+    }
+    #cesiumContainer1 {
+        width: 0vw;
+        height: 100vh;
+        display: inline-block;
     }
 }
 </style>
