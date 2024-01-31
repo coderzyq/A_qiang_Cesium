@@ -52,6 +52,14 @@ watchEffect(() => {
 });
 const btns = reactive([
   {
+    label: "分屏对比",
+    name: "splitViewer",
+    contents: [
+      { id: "startSync", label: "开启分屏"},
+      { id: "cancelSync", label: "取消分屏" },
+    ]
+  },
+  {
     label: "操作3dtiles",
     name: "3dtiles",
     contents: [
