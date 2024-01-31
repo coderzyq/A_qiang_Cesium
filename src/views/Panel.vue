@@ -128,16 +128,16 @@ const btns = reactive([
     name: "weaterEffect",
     contents: [
       {
-        id: "rain",
-        label: "雨天",
+        id: "rainProcessStage",
+        label: "雨天(pps)",
       },
       {
-        id: "snow",
-        label: "雪天",
+        id: "snowProcessStage",
+        label: "雪天(pps)",
       },
       {
-        id: "fog",
-        label: "雾天",
+        id: "fogProcessStage",
+        label: "雾天(pps)",
       },
       {
         id: "clouds",

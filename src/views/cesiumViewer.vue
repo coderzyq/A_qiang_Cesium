@@ -8,7 +8,7 @@
 <template>
     <div id="container">
         <div id="cesiumContainer" ref="viewerRef"></div>
-            <div id="cesiumContainer1" ref="viewer1Ref"></div>
+        <div id="cesiumContainer1" ref="viewer1Ref"></div>
         <Panel v-model:visible="dialogVisible" @btnClick="btnClick"></Panel>
     </div>
 </template>
@@ -26,9 +26,11 @@ import ScanRadar from "@/cesiumUtils/scanRadar"
 import SyncViewer from "@/cesiumUtils/splitViewer"
 import DynamicMaskEllipsoid from "@/material/dynamicMaskEllipsoid"
 import ElectricMaterialProperty4Ellipsoid from "@/material/electricMaterialProperty4Ellipsoid"
+import RainEffect from "@/material/particleRain"
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
+let rainObj = null
 onMounted(async () => {
     viewer = await initCesium("cesiumContainer");
     viewer1 = await initCesium("cesiumContainer1");
@@ -39,7 +41,7 @@ onMounted(async () => {
 })
 const dialogVisible = ref(false);
 let editB3dm = null
-let trailPolyline = null
+let trailPolyline = undefined
 //动态轨迹线（图片）
 const imageProperty = (viewer) => {
     trailPolyline = viewer.entities.add({
@@ -109,16 +111,27 @@ const scanRadar = (viewer) => {
     })
     viewer.flyTo(radarEntity)
 };
+//降雨效果
+const rainParticle = (viewer) => {
+    if (!rainObj) {
+        rainObj = new RainEffect(viewer, {
+            tiltAngle: -0.0,
+            rainSize: 0.6,
+            rainSpeed: 350.0
+        })
+        rainObj.show(true)
+    }
+}
 //分屏联动
 let syncViewer = null
 const viewerRef = ref(null)
-const viewer1Ref = ref(null) 
+const viewer1Ref = ref(null)
 const btnClick = (params) => {
     const { id, step } = params;
     console.log(id, step);
     switch (id) {
-        case "startSync": 
-            syncViewer ? syncViewer = syncViewer: syncViewer =new SyncViewer(viewer, viewer1)
+        case "startSync":
+            syncViewer ? syncViewer = syncViewer : syncViewer = new SyncViewer(viewer, viewer1)
             viewerRef.value.style.transition = "width .5s ease-in-out"
             viewerRef.value.style.width = "50vw"
             viewer1Ref.value.style.transition = "width .5s ease-in-out"
@@ -165,6 +178,9 @@ const btnClick = (params) => {
         case "removeEffect":
             viewer.entities.removeAll()
             break;
+        case "rainProcessStage":
+            rainParticle(viewer)
+            break
     }
 }
 </script>
@@ -174,12 +190,14 @@ const btnClick = (params) => {
     height: 100vh;
     display: flex;
     position: relative;
+
     #cesiumContainer {
         width: 100vw;
         height: 100vh;
         overflow: hidden;
         display: inline-block;
     }
+
     #cesiumContainer1 {
         width: 0vw;
         height: 100vh;
