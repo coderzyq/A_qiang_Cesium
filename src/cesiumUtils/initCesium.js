@@ -35,7 +35,9 @@ const initCesium = async (id) => {
     viewer.terrainProvider = terrainProvider;
     viewer.scene.globe.depthTestAgainstTerrain = true; // 启用深度测试，让地形后面的东西消失。
     // 去除版权信息
-    viewer._cesiumWidget._creditContainer.style.display = "none";
+    viewer._cesiumWidget._creditContainer.style.display = "none"; // 隐藏版权
+    viewer.scene.globe.show = true;
+    viewer.scene.debugShowFramesPerSecond = true;
     // viewer.camera.setView({
     //     // Cesium的坐标是以地心为原点，一向指向南美洲，一向指向亚洲，一向指向北极州
     //     // fromDegrees()方法，将经纬度和高程转换为世界坐标

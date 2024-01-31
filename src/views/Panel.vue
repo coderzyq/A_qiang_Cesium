@@ -52,6 +52,14 @@ watchEffect(() => {
 });
 const btns = reactive([
   {
+    label: "分屏对比",
+    name: "splitViewer",
+    contents: [
+      { id: "startSync", label: "开启分屏"},
+      { id: "cancelSync", label: "取消分屏" },
+    ]
+  },
+  {
     label: "操作3dtiles",
     name: "3dtiles",
     contents: [
@@ -87,7 +95,7 @@ const btns = reactive([
     contents: [
       { id: "electricMaterialEllipsoid", label: "电弧球" },
       { id: "maskMaterialEllipsoid", label: "遮罩球" },
-      { id: "expandCircle", label: "三维雷达" },
+      { id: "3dScanRadar", label: "三维雷达" },
       { id: "breathCircle", label: "呼吸圆" },
       { id: "disappearCircle", label: "消隐圆" },
       { id: "removeEffect", label: "清除效果" }
@@ -120,16 +128,16 @@ const btns = reactive([
     name: "weaterEffect",
     contents: [
       {
-        id: "rain",
-        label: "雨天",
+        id: "rainProcessStage",
+        label: "雨天(pps)",
       },
       {
-        id: "snow",
-        label: "雪天",
+        id: "snowProcessStage",
+        label: "雪天(pps)",
       },
       {
-        id: "fog",
-        label: "雾天",
+        id: "fogProcessStage",
+        label: "雾天(pps)",
       },
       {
         id: "clouds",

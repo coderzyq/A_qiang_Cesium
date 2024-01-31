@@ -48,6 +48,16 @@ const routes = [
     name: "particleSystem",
     component: cesiumViewer,
   },
+  {
+    path: "/splitViewer",
+    name: "splitViewer",
+    component: cesiumViewer,
+  },
+  {
+    path: "/uavRoamingFly",
+    name: "uavRoamingFly",
+    component: cesiumViewer,
+  },
   // {
   //   path: "/about",
   //   name: "about",

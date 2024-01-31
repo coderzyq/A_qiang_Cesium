@@ -7,7 +7,8 @@
 -->
 <template>
     <div id="container">
-        <div id="cesiumContainer"></div>
+        <div id="cesiumContainer" ref="viewerRef"></div>
+        <div id="cesiumContainer1" ref="viewer1Ref"></div>
         <Panel v-model:visible="dialogVisible" @btnClick="btnClick"></Panel>
     </div>
 </template>
@@ -21,12 +22,18 @@ import "cesium/Source/Widgets/widgets.css"
 import initCesium from "@/cesiumUtils/initCesium"
 import EditB3DM from "@/cesiumUtils/EditB3DM";
 import PolylineImageTrailMaterialProperty from "@/cesiumUtils/ImageMaterial"
+import ScanRadar from "@/cesiumUtils/scanRadar"
+import SyncViewer from "@/cesiumUtils/splitViewer"
 import DynamicMaskEllipsoid from "@/material/dynamicMaskEllipsoid"
 import ElectricMaterialProperty4Ellipsoid from "@/material/electricMaterialProperty4Ellipsoid"
+import RainEffect from "@/material/particleRain"
 let viewer = null;
+let viewer1 = null;
 let tilesetModel = null
+let rainObj = null
 onMounted(async () => {
     viewer = await initCesium("cesiumContainer");
+    viewer1 = await initCesium("cesiumContainer1");
     tilesetModel = new Cesium.Cesium3DTileset({
         url: "/3dtiles/data/tileset.json"
     });
@@ -34,7 +41,7 @@ onMounted(async () => {
 })
 const dialogVisible = ref(false);
 let editB3dm = null
-let trailPolyline = null
+let trailPolyline = undefined
 //动态轨迹线（图片）
 const imageProperty = (viewer) => {
     trailPolyline = viewer.entities.add({
@@ -92,10 +99,51 @@ const electricMaterialProperty4Ellipsoid = (viewer) => {
     })
     viewer.flyTo(electricEntity)
 }
+//三维雷达
+const scanRadar = (viewer) => {
+    const radarEntity = new ScanRadar({
+        viewer: viewer,
+        position: { lng: 117, lat: 37, height: 0 },
+        radius: 2000.0,
+        colorEllipsoid: { ellipsoid: "#FF1493", alpha: 0.4 },
+        colorWall: { wall: "#0000FF", alpha: 1 },
+        speed: 1.0,
+    })
+    viewer.flyTo(radarEntity)
+};
+//降雨效果
+const rainParticle = (viewer) => {
+    if (!rainObj) {
+        rainObj = new RainEffect(viewer, {
+            tiltAngle: -0.0,
+            rainSize: 0.6,
+            rainSpeed: 350.0
+        })
+        rainObj.show(true)
+    }
+}
+//分屏联动
+let syncViewer = null
+const viewerRef = ref(null)
+const viewer1Ref = ref(null)
 const btnClick = (params) => {
     const { id, step } = params;
     console.log(id, step);
     switch (id) {
+        case "startSync":
+            syncViewer ? syncViewer = syncViewer : syncViewer = new SyncViewer(viewer, viewer1)
+            viewerRef.value.style.transition = "width .5s ease-in-out"
+            viewerRef.value.style.width = "50vw"
+            viewer1Ref.value.style.transition = "width .5s ease-in-out"
+            viewer1Ref.value.style.width = "50vw"
+            syncViewer.sync(true)
+            break
+        case "cancelSync":
+            viewerRef.value.style.transition = "width .5s ease-in-out"
+            viewerRef.value.style.width = "100vw"
+            viewer1Ref.value.style.width = "0vw"
+            syncViewer.sync(false)
+            break
         case "initTiles":
             viewer.flyTo(tilesetModel)
             editB3dm = new EditB3DM(viewer, tilesetModel, 1, 1)
@@ -124,9 +172,15 @@ const btnClick = (params) => {
         case "maskMaterialEllipsoid":
             maskMaterialEllipsoid(viewer)
             break;
+        case "3dScanRadar":
+            scanRadar(viewer);
+            break;
         case "removeEffect":
             viewer.entities.removeAll()
             break;
+        case "rainProcessStage":
+            rainParticle(viewer)
+            break
     }
 }
 </script>
@@ -134,13 +188,20 @@ const btnClick = (params) => {
 #container {
     width: 100vw;
     height: 100vh;
+    display: flex;
+    position: relative;
 
     #cesiumContainer {
         width: 100vw;
         height: 100vh;
-        margin: 0;
-        padding: 0;
         overflow: hidden;
+        display: inline-block;
+    }
+
+    #cesiumContainer1 {
+        width: 0vw;
+        height: 100vh;
+        display: inline-block;
     }
 }
 </style>
