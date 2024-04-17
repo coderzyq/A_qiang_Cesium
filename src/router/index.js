@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import cesiumViewer from "@/views/CesiumViewer.vue";
+import cesiumViewer from "@/views/cesiumViewer.vue";
 
 const routes = [
   {
@@ -37,6 +37,11 @@ const routes = [
     path: "/geoAnalysis",
     name: "geoAnalysis",
     component: cesiumViewer,
+  },
+  {
+    path: "/underGroundPipeNet",
+    name: "underGroundPipeNet",
+    component: cesiumViewer
   },
   {
     path: "/weaterEffect",

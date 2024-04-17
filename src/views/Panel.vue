@@ -11,6 +11,7 @@
             <div v-for="(item, index) in btn.contents" @click="btnClick(item)" style="margin: 10px;">
               <el-button size="default">{{ item.label }}</el-button>
               <el-slider v-if="item.id === 'bufferAnalysis'" v-model="valueStep" :step="50" :max="800" />
+              <el-slider v-else-if="item.id === 'polygonExa'" v-model="valueExa" :step="1" :max="40" />
             </div>
           </el-collapse-item>
         </div>
@@ -55,7 +56,7 @@ const btns = reactive([
     label: "分屏对比",
     name: "splitViewer",
     contents: [
-      { id: "startSync", label: "开启分屏"},
+      { id: "startSync", label: "开启分屏" },
       { id: "cancelSync", label: "取消分屏" },
     ]
   },
@@ -115,12 +116,22 @@ const btns = reactive([
     name: "geoAnalysis",
     contents: [
       { id: "bufferAnalysis", label: "缓冲区分析" },
+      { id: "polygonExa", label: "多边形挖掘" },
       { id: "terrainAnalysis", label: "地形分析" },
       { id: "slopeAnalysis", label: "坡度分析" },
       { id: "breakAnalysis", label: "通视分析" },
       { id: "viewAnalysis", label: "可视域分析" },
       { id: "heightAnalysis", label: "高程分析" },
       { id: "removeAnalysis", label: "清除效果" },
+    ]
+  },
+  {
+    label: "地下管网",
+    name: "underGroundPipeNet",
+    contents: [
+      { id: "exagg", label: "多边形裁剪" },
+      { id: "pipeVisible", label: "管网显示" },
+      { id: "pipeHidden", label: "管网隐藏" },
     ]
   },
   {
@@ -157,8 +168,13 @@ const btns = reactive([
   }
 ]);
 const valueStep = ref(50)
+const valueExa = ref(10)
 const btnClick = (item) => {
-  item.step = valueStep.value
+  if (item.id == "bufferAnalysis") {
+    item.step = valueStep.value
+  } else {
+    item.step = valueExa.value
+  }
   emit("btnClick", { ...item })
 }
 const toggle = () => {

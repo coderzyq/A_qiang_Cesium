@@ -16,7 +16,7 @@
 import { useStore } from "vuex"
 import {ref, watch} from 'vue';
 import { useRouter, useRoute } from "vue-router";
-import cesiumViewer from "@/views/CesiumViewer.vue";
+import cesiumViewer from "@/views/cesiumViewer.vue";
 const router = useRouter()
 const route = useRoute()
 const store = useStore()
