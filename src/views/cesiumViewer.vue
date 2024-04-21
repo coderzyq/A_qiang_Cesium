@@ -14,8 +14,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue"
-import { onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import Panel from "@/views/Panel.vue";
 import * as Cesium from "cesium"
 import "cesium/Source/Widgets/widgets.css"
@@ -27,6 +26,7 @@ import SyncViewer from "@/cesiumUtils/splitViewer"
 import DynamicMaskEllipsoid from "@/material/dynamicMaskEllipsoid"
 import ElectricMaterialProperty4Ellipsoid from "@/material/electricMaterialProperty4Ellipsoid"
 import RainEffect from "@/material/particleRain"
+import TerrainExcavation from "@/cesiumUtils/terrainClippe"
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
@@ -122,6 +122,31 @@ const rainParticle = (viewer) => {
         rainObj.show(true)
     }
 }
+//地形挖掘
+let terrainClipPlanObj = null
+let heightPre = ref(-1)
+const terrainClip = (terrainBool, height) => {
+    console.log(terrainClipPlanObj)
+    if (!terrainClipPlanObj) {
+        debugger
+        terrainClipPlanObj = new TerrainExcavation(viewer, {
+            height: height,
+            splitNum: 1000,
+            bottomImg: require("@/assets/smile.jpg"),
+            wallImg: require("@/assets/gg.png"),
+        })
+    }
+    if (terrainBool) {
+        console.log(heightPre.value)
+        if (heightPre.value >= 0) {
+            terrainClipPlanObj.height = height;
+        } else {
+            
+            terrainClipPlanObj.startCreate()
+            heightPre.value = height
+        }
+    }
+}
 //分屏联动
 let syncViewer = null
 const viewerRef = ref(null)
@@ -179,8 +204,19 @@ const btnClick = (params) => {
             viewer.entities.removeAll()
             break;
         case "rainProcessStage":
-            rainParticle(viewer)
-            break
+            rainParticle(viewer, step)
+            break;
+        case "polygonExa":
+            terrainClip(true, step)
+            terrainClipPlanObj.show = true
+            break;
+        case "removeAnalysis":
+            if (terrainClipPlanObj && terrainClipPlanObj.clear && typeof terrainClipPlanObj.clear === 'function') {
+                terrainClipPlanObj.clear();
+                terrainClipPlanObj = null;
+                heightPre.value = -1
+            }
+            break;
     }
 }
 </script>

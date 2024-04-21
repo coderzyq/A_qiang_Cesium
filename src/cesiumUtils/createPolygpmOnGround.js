@@ -21,7 +21,7 @@ const CreatePolygonOnGround = function (viewer, resultList, options, callback) {
     let drawStatus = true
     handler.setInputAction(function (event) {
         let pixPos = event.position
-        let cartesian = getCartesian3FromPx(viewer, pixPos)
+        let cartesian = getCartesian3FromPX(viewer, pixPos)
         if (anchorpoints.length == 0) {
             anchorpoints.push(cartesian)
             let linePoints = new Cesium.CallbackProperty(function () {
@@ -38,7 +38,7 @@ const CreatePolygonOnGround = function (viewer, resultList, options, callback) {
                     positions: linePoints,
                     width: outlineWidth,
                     material: outlineColor,
-                    clamToGround: true
+                    clampToGround: true
                 },
                 polygon: {
                     heightReference: Cesium.HeightReference.NONE,
@@ -101,7 +101,7 @@ const getCartesian3FromPX = (viewer, px) => {
                 let lon = Cesium.Math.toDegrees(cartographic.longitude),
                     lat = Cesium.Math.toDegrees(cartographic.latitude),
                     height = cartographic.height;
-                cartesian = transformWGS84ToCartesian(viewer, { lon, lat, alt: height })
+                cartesian = transformWGS84ToCartesian(viewer, { lng: lon, lat, alt: height })
             }
         }
     }
@@ -120,7 +120,7 @@ const getCartesian3FromPX = (viewer, px) => {
         cartesian = viewer.scene.camera.pickEllipsoid(px, viewer.scene.globe.ellipsoid)
     }
     if (cartesian) {
-        let position = transformWGS84ToCartesian(viewer, cartesian)
+        let position = transformCartesianToWGS84(viewer, cartesian)
         if (position.alt < 0) {
             cartesian = transformWGS84ToCartesian(viewer, position, 0.1)
         }
