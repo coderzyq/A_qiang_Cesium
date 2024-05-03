@@ -27,6 +27,7 @@ import DynamicMaskEllipsoid from "@/material/dynamicMaskEllipsoid"
 import ElectricMaterialProperty4Ellipsoid from "@/material/electricMaterialProperty4Ellipsoid"
 import RainEffect from "@/material/particleRain"
 import TerrainExcavation from "@/cesiumUtils/terrainClippe"
+import VisibilityAnalysis from "@/cesiumUtils/visibilityAnalysis";
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
@@ -209,6 +210,10 @@ const btnClick = (params) => {
         case "polygonExa":
             terrainClip(true, step)
             terrainClipPlanObj.show = true
+            break;
+        case "breakAnalysis":
+            console.log(1111111)
+            const vaObj = new VisibilityAnalysis(viewer)
             break;
         case "removeAnalysis":
             if (terrainClipPlanObj && terrainClipPlanObj.clear && typeof terrainClipPlanObj.clear === 'function') {
