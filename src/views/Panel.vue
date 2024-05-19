@@ -99,6 +99,7 @@ const btns = reactive([
       { id: "3dScanRadar", label: "三维雷达" },
       { id: "breathCircle", label: "呼吸圆" },
       { id: "disappearCircle", label: "消隐圆" },
+      { id: "dynamicfrustum", label: "动态视锥体" },
       { id: "removeEffect", label: "清除效果" }
     ]
   },
@@ -108,6 +109,7 @@ const btns = reactive([
     contents: [
       { id: "startRoaming", label: "开始漫游" },
       { id: "pauseRoaming", label: "暂停漫游" },
+      { id: "routePoint", label: "航线点位" },
       { id: "cancelRoaming", label: "取消漫游" },
     ]
   },

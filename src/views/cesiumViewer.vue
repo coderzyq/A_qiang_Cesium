@@ -28,6 +28,7 @@ import ElectricMaterialProperty4Ellipsoid from "@/material/electricMaterialPrope
 import RainEffect from "@/material/particleRain"
 import TerrainExcavation from "@/cesiumUtils/terrainClippe"
 import VisibilityAnalysis from "@/cesiumUtils/visibilityAnalysis";
+import CreateFrustum from "./createFrustum";
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
@@ -142,7 +143,7 @@ const terrainClip = (terrainBool, height) => {
         if (heightPre.value >= 0) {
             terrainClipPlanObj.height = height;
         } else {
-            
+
             terrainClipPlanObj.startCreate()
             heightPre.value = height
         }
@@ -201,6 +202,43 @@ const btnClick = (params) => {
         case "3dScanRadar":
             scanRadar(viewer);
             break;
+        case "dynamicfrustum":
+            // 创建视点
+            let origin = Cesium.Cartesian3.fromDegrees(120, 30, 300);
+            // 视角定位
+            viewer.camera.flyTo({
+                destination: origin,
+            });
+            let heading = 0;
+            let pitch = 0;
+            let roll = 0;
+            let hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll)
+            let orientation = Cesium.Transforms.headingPitchRollQuaternion(origin, hpr, Cesium.Ellipsoid.WGS84)
+            // 创建视锥体
+            let createFrustum = new CreateFrustum({
+                viewer: viewer,
+                position: origin,
+                orientation: orientation,
+                fov: 30,
+                near: 1,
+                far: 100,
+                aspectRatio: window.innerWidth / window.innerHeight,
+            });
+
+            // 动态修改视锥体的姿态
+            setInterval(() => {
+                // 绕Z轴旋转-航向
+                // heading += 0.01;
+                // 绕X轴旋转-俯仰
+                // pitch += 0.01;
+                // 绕Y轴旋转-翻滚
+                roll += 0.01;
+
+                hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll)
+                orientation = Cesium.Transforms.headingPitchRollQuaternion(origin, hpr);
+                createFrustum.updateOrientation(origin, orientation);
+            }, 200)
+            break;
         case "removeEffect":
             viewer.entities.removeAll()
             break;
@@ -212,9 +250,175 @@ const btnClick = (params) => {
             terrainClipPlanObj.show = true
             break;
         case "breakAnalysis":
-            console.log(1111111)
             const vaObj = new VisibilityAnalysis(viewer)
             break;
+        case "routePoint":
+            // var Poly_pointsCollections = [];
+            // var scene = viewer.scene;
+            // var Poly_coordiantesArray = [
+            //     [
+            //         72.35433701166211, 52.57522385967319, 300.18442795152974,
+            //         44.89719893727921, 72.39011732046649, 300.86453159141635,
+            //     ],
+            //     [
+            //         67.29773654341213, 32.88259716109294, 300.14234015976554,
+            //         32.98282610463128, 69.19404079866142, 300.354623867578226,
+            //         66.85127436871454, 31.712787322338162, 300.354623867578226
+            //     ],
+            // ];
+
+            // var Poly_nameArray = "straightLine_";
+            // for (var i = 0; i < 2; i++) {
+            //     var temp = Poly_coordiantesArray[i];
+            //     for (var j = 0; j < temp.length; j = j + 3) {
+            //         draw_Zone_Corner_points(
+            //             temp[j],
+            //             temp[j + 1],
+            //             temp[j + 2]
+            //         );
+            //     }
+            // }
+
+            // var directionde = null
+            // var cartesianDe = {}
+            // var cardir = {}
+            // async function draw_Zone_Corner_points(lon, lat, height, name) {
+            //     cartesianDe = Cesium.Cartesian3.fromDegrees(lon, lat, height, Cesium.Ellipsoid.WGS84, new Cesium.Cartesian3())
+            //     // console.log(cartesianDe, "cartesian")
+            //     // // debugger
+            //     // cardir = Cesium.Cartesian3.subtract(Cesium.Cartesian3.ZERO, cartesianDe, new Cesium.Cartesian3())
+            //     // // debugger
+            //     // console.log(cardir, "directionde")
+            //     // cardir = Cesium.Cartesian3.normalize(cardir, cardir)
+            //     // let ray = new Cesium.Ray(cartesianDe, cardir)
+            //     // const intersection = Cesium.IntersectionTests.rayEllipsoid(ray, Cesium.Ellipsoid.WGS84);
+            //     // const point = Cesium.Ray.getPoint(ray, intersection.start);
+            //     var pointGeometry = viewer.entities.add({
+            //         name: "straightLinePoint_",
+            //         description: [lon, lat, height],
+            //         position: Cesium.Cartesian3.fromDegrees(lon, lat, height),
+            //         point: {
+            //             color: Cesium.Color.SKYBLUE,
+            //             pixelSize: 10,
+            //             outlineColor: Cesium.Color.YELLOW,
+            //             outlineWidth: 3,
+            //             // disableDepthTestDistance: Number.POSITIVE_INFINITY, // we can see points arounds earth
+            //             // heightReference: Cesium.HeightReference.RELATIVE_TO_TERRAIN,
+            //         },
+
+            //     });
+            //     const terrainProvider = await Cesium.createWorldTerrainAsync();
+            //     const positions = [
+            //         Cesium.Cartographic.fromDegrees(lon, lat),
+            //     ];
+            //     let updatedPositions = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
+            //     console.log(updatedPositions[0])
+            //     updatedPositions = Cesium.Cartesian3.fromRadians(updatedPositions[0].longitude, updatedPositions[0].latitude, updatedPositions[0].height)
+            //     console.log(updatedPositions, "updte")
+            //     var polyline = viewer.entities.add({
+            //         polyline: {
+            //             positions: new Cesium.CallbackProperty(() => {
+            //                 return [updatedPositions, cartesianDe]
+            //             }, false),
+
+            //             width: 10
+            //         }
+            //     })
+            //     Poly_pointsCollections.push(pointGeometry);
+            // }
+            // var ZoneMoment = true;
+            // var rightEntityPicked = false;
+            // var dragging = false;
+            // var pickedEntity;
+            // var mouseDroped = false;
+            // var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+            // handler.setInputAction(function (click) {
+            //     if (ZoneMoment) {
+            //         console.log("LEFT down ");
+            //         var pickedObject = scene.pick(click.position);
+            //         if (Cesium.defined(pickedObject) && pickedObject.id) {
+            //             var entityName = pickedObject.id._name;
+            //             entityName = entityName.split("_");
+            //             console.log("entityName ", entityName[0]);
+            //             if (entityName[0] === "straightLinePoint") {
+            //                 rightEntityPicked = true;
+            //             }
+            //             if (rightEntityPicked) {
+            //                 dragging = true;
+            //                 scene.screenSpaceCameraController.enableRotate = false;
+            //                 pickedEntity = pickedObject;
+            //                 console.log(pickedEntity, "pick")
+            //             }
+            //         }
+            //     }
+            // }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+            // handler.setInputAction(function (movement) {
+            //     if (ZoneMoment && rightEntityPicked && dragging) {
+            //         var cartesian = pickedEntity.id.position.getValue(
+            //             Cesium.JulianDate.fromDate(new Date())
+            //         );
+            //         var cartographic =
+            //             scene.globe.ellipsoid.cartesianToCartographic(cartesian);
+            //         var surfaceNormal =
+            //             scene.globe.ellipsoid.geodeticSurfaceNormal(cartesian);
+            //         var planeNormal = Cesium.Cartesian3.subtract(
+            //             scene.camera.position,
+            //             cartesian,
+            //             new Cesium.Cartesian3()
+            //         );
+            //         planeNormal = Cesium.Cartesian3.normalize(
+            //             planeNormal,
+            //             planeNormal
+            //         );
+            //         console.log(movement.endPosition, "movement")
+            //         let subtract = {}
+            //         let direction = Cesium.Cartesian3.subtract(Cesium.Cartesian3.ZERO, cartesian, subtract)
+            //         console.log(subtract, "substract")
+            //         direction = Cesium.Cartesian3.normalize(subtract, direction)
+            //         console.log(direction, "direction")
+            //         let originRay = new Cesium.Ray(Cesium.Cartesian3.ZERO, direction)
+            //         console.log(originRay, "originRay")
+            //         var ray = viewer.scene.camera.getPickRay(movement.endPosition);
+            //         var plane = Cesium.Plane.fromPointNormal(cartesian, planeNormal);
+            //         var newCartesian = Cesium.IntersectionTests.rayPlane(ray, plane);
+            //         plane.material = Cesium.Color.WHITE.withAlpha(0.05);
+            //         plane.outlineColor = Cesium.Color.WHITE;
+            //         let interactPoint = Cesium.IntersectionTests.rayEllipsoid(originRay, Cesium.Ellipsoid.WGS84)
+            //         const point = Cesium.Ray.getPoint(originRay, interactPoint.start);
+            //         console.log(point, "point")
+            //         // console.log(interactPoint)
+            //         var newCartographic =
+            //             viewer.scene.globe.ellipsoid.cartesianToCartographic(
+            //                 newCartesian
+            //             );
+            //         cartographic.longitude = newCartographic.longitude;
+            //         cartographic.latitude = newCartographic.latitude;
+            //         pickedEntity.id.position.setValue(
+            //             scene.globe.ellipsoid.cartographicToCartesian(cartographic)
+            //         );
+            //         // var pointGeometry = viewer.entities.add({
+            //         //     name: "straightLinePoint_",
+            //         //     polyline: {
+            //         //         positions: new Cesium.CallbackProperty(() => {
+            //         //             return [point, cartesian]
+            //         //         }, false),
+            //         //         width: 1
+            //         //     },
+            //         // });
+            //     }
+            //     if (dragging) {
+            //         mouseDroped = true;
+            //     }
+            // }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            // handler.setInputAction(function () {
+            //     if (ZoneMoment && rightEntityPicked && mouseDroped) {
+            //         console.log("Left up ");
+            //         dragging = false;
+            //         mouseDroped = false;
+            //         scene.screenSpaceCameraController.enableRotate = true;
+            //     }
+            // }, Cesium.ScreenSpaceEventType.LEFT_UP);
+            break
         case "removeAnalysis":
             if (terrainClipPlanObj && terrainClipPlanObj.clear && typeof terrainClipPlanObj.clear === 'function') {
                 terrainClipPlanObj.clear();
