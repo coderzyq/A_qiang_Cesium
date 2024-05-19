@@ -28,7 +28,7 @@ import ElectricMaterialProperty4Ellipsoid from "@/material/electricMaterialPrope
 import RainEffect from "@/material/particleRain"
 import TerrainExcavation from "@/cesiumUtils/terrainClippe"
 import VisibilityAnalysis from "@/cesiumUtils/visibilityAnalysis";
-import CreateFrustum from "./createFrustum";
+import CreateFrustum from "@/cesiumUtils/createFrustum";
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
@@ -151,6 +151,7 @@ const terrainClip = (terrainBool, height) => {
 }
 //分屏联动
 let syncViewer = null
+let intervalId = null
 const viewerRef = ref(null)
 const viewer1Ref = ref(null)
 const btnClick = (params) => {
@@ -226,7 +227,7 @@ const btnClick = (params) => {
             });
 
             // 动态修改视锥体的姿态
-            setInterval(() => {
+            intervalId = setInterval(() => {
                 // 绕Z轴旋转-航向
                 // heading += 0.01;
                 // 绕X轴旋转-俯仰
@@ -241,6 +242,8 @@ const btnClick = (params) => {
             break;
         case "removeEffect":
             viewer.entities.removeAll()
+            viewer.scene.primitives.removeAll()
+            clearInterval(intervalId)
             break;
         case "rainProcessStage":
             rainParticle(viewer, step)
