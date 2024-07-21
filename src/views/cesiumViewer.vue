@@ -185,6 +185,30 @@ const btnClick = (params) => {
         case "destroyTiles":
             editB3dm.destroy()
             break;
+        case "gifBillboard":
+            let img = document.createElement("img")
+            viewerRef.value.appendChild(img)
+            img.src = require("@/assets/gif_billboard.gif")
+            img.onload = () => {
+                const rub = new SuperGif({
+                    gif: img
+                })
+                rub.load(() => {
+                    const entity = viewer.entities.add({
+                        position: Cesium.Cartesian3.fromDegrees(117, 30),
+                        billboard: {
+                            image: new Cesium.CallbackProperty(() => {
+                                return rub.get_canvas().toDataURL("image/png");
+                            }, false),
+                            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                            scaleByDistance: new Cesium.NearFarScalar(500, 1.0, 2000, 0.1)
+                        }
+                    })
+                    viewer.zoomTo(entity);
+                })
+            }
+            break
         case "dynamcTrail":
             trailPolyline = imageProperty(viewer)
             viewer.camera.flyTo({

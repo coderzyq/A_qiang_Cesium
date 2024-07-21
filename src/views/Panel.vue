@@ -87,6 +87,7 @@ const btns = reactive([
       { id: "expandCircle", label: "扩散圆" },
       { id: "breathCircle", label: "呼吸圆" },
       { id: "disappearCircle", label: "消隐圆" },
+      { id: "gifBillboard", label: "加载gif图片" },
       { id: "removeEffect", label: "清除效果" }
     ]
   },
