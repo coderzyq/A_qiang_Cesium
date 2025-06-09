@@ -51,7 +51,7 @@ Object.defineProperties(DynamicMaskEllipsoid.prototype, {
   speed: Cesium.createPropertyDescriptor("speed"),
 });
 
-Cesium.DynamicMaskEllipsoid = DynamicMaskEllipsoid;
+// Cesium.DynamicMaskEllipsoid = DynamicMaskEllipsoid;
 Cesium.Material.EllipsoidTrailMaterialType = "EllipsoidTrailMaterialType";
 Cesium.Material.EllipsoidTrailMaterialSource = `
     uniform vec4 color;

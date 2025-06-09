@@ -24,7 +24,7 @@ import PolylineImageTrailMaterialProperty from "@/cesiumUtils/ImageMaterial"
 import ScanRadar from "@/cesiumUtils/scanRadar"
 import SyncViewer from "@/cesiumUtils/splitViewer"
 import DynamicMaskEllipsoid from "@/material/dynamicMaskEllipsoid"
-import ElectricMaterialProperty4Ellipsoid from "@/material/electricMaterialProperty4Ellipsoid"
+import ElectricMaterialProperty4Ellipsoid from "@/material/electricMaterialProperty4Ellipsoid.js"
 import RainEffect from "@/material/particleRain"
 import TerrainExcavation from "@/cesiumUtils/terrainClippe"
 import VisibilityAnalysis from "@/cesiumUtils/visibilityAnalysis";

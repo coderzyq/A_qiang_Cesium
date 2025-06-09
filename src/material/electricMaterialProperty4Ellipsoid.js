@@ -52,7 +52,7 @@ Object.defineProperties(ElectricMaterialProperty4Ellipsoid.prototype, {
   speed: Cesium.createPropertyDescriptor("speed"),
 });
  
-Cesium.ElectricMaterialProperty4Ellipsoid = ElectricMaterialProperty4Ellipsoid;
+// Cesium.ElectricMaterialProperty4Ellipsoid = ElectricMaterialProperty4Ellipsoid;
 Cesium.Material.ElectricMaterialProperty4Ellipsoid =
   "ElectricMaterialProperty4Ellipsoid";
 Cesium.Material.EllipsoidElectricMaterialType = "EllipsoidElectricMaterialType";
