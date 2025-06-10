@@ -196,9 +196,9 @@ const handleChange = (val) => {
 
 <style lang="less" scoped>
 @color: #fff;
-@maxWidth: 330px;
-@minWidth: 330px;
-@width: 330px;
+@maxWidth: 310px;
+@minWidth: 310px;
+@width: 320px;
 @backgroundColor: rgba(20, 55, 95, 0.3);
 
 .panel-wrap {
@@ -273,18 +273,23 @@ const handleChange = (val) => {
   }
 }
 
-::v-deep .demo-collapse {
+:deep(.demo-collapse) {
   background-color: @backgroundColor !important;
   max-width: @maxWidth;
   min-width: @minWidth;
 }
 
-::v-deep .el-collapse {
+:deep(.el-collapse) {
   border-top: 1px solid rgba(70, 131, 180, 0.596);
   border-bottom: 1px solid rgba(70, 131, 180, 0.596);
 }
-
-::v-deep .el-collapse-item__header {
+:deep(.el-collapse-item) {
+  color: @color;
+  background-color: @backgroundColor !important;
+  font-size: 16px;
+  width: @width;
+}
+:deep(.el-collapse-item__header) {
   color: @color;
   background-color: @backgroundColor !important;
   font-size: 16px;
@@ -295,7 +300,7 @@ const handleChange = (val) => {
   border-bottom: 1px solid transparent;
 }
 
-::v-deep .el-collapse-item__wrap {
+:deep(.el-collapse-item__wrap) {
   color: @color;
   background-color: @backgroundColor !important;
   font-size: 16px;
@@ -304,7 +309,7 @@ const handleChange = (val) => {
   border-bottom: 1px solid transparent;
 }
 
-::v-deep .el-collapse-item__content {
+:deep(.el-collapse-item__content) {
   color: @color;
   min-width: @minWidth;
   max-width: @maxWidth;
@@ -315,7 +320,7 @@ const handleChange = (val) => {
   flex-wrap: wrap;
 }
 
-::v-deep .el-slider {
+:deep(.el-slider) {
   width: 290px;
 }
 </style>

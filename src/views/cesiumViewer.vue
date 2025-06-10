@@ -8,7 +8,7 @@
 <template>
     <div id="container">
         <div id="cesiumContainer" ref="viewerRef"></div>
-        <div id="cesiumContainer1" ref="viewer1Ref"></div>
+        <!-- <div id="cesiumContainer1" ref="viewer1Ref"></div> -->
         <Panel v-model:visible="dialogVisible" @btnClick="btnClick"></Panel>
     </div>
 </template>
@@ -45,7 +45,7 @@ const dialogVisible = ref(false);
 let editB3dm = null
 let trailPolyline = undefined
 //动态轨迹线（图片）
-const imageProperty = (viewer) => {
+const imageProperty = async (viewer) => {
     trailPolyline = viewer.entities.add({
         polyline: {
             clampToGround: true,
@@ -59,7 +59,7 @@ const imageProperty = (viewer) => {
                 //轨迹运行的速率
                 speed: 10,
                 //随意一张图片
-                image: require("@/assets/smile.jpg"),
+                image: (await import("@/assets/smile.jpg")).default,
                 //将轨迹分成一行50个图片
                 repeat: { x: 40, y: 1 },
             }),
@@ -127,15 +127,15 @@ const rainParticle = (viewer) => {
 //地形挖掘
 let terrainClipPlanObj = null
 let heightPre = ref(-1)
-const terrainClip = (terrainBool, height) => {
+const terrainClip = async (terrainBool, height) => {
     console.log(terrainClipPlanObj)
     if (!terrainClipPlanObj) {
         debugger
         terrainClipPlanObj = new TerrainExcavation(viewer, {
             height: height,
             splitNum: 1000,
-            bottomImg: require("@/assets/smile.jpg"),
-            wallImg: require("@/assets/gg.png"),
+            bottomImg: (await import("@/assets/smile.jpg")).default,
+            wallImg: (await import("@/assets/gg.png")).default,
         })
     }
     if (terrainBool) {
