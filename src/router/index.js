@@ -34,6 +34,11 @@ const routes = [
     component: cesiumViewer,
   },
   {
+    name: "postProcessing",
+    path: "/postProcessing",
+    component: cesiumViewer,
+  },
+  {
     path: "/geoAnalysis",
     name: "geoAnalysis",
     component: cesiumViewer,

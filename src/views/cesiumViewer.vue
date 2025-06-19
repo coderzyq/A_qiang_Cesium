@@ -453,7 +453,292 @@ const btnClick = (params) => {
                 heightPre.value = -1
             }
             break;
+        case "getWorldCoordinates":
+            getWorldCoordinates(viewer)
+            break;
+        case "shaderParamsUpdate":
+            shaderParamsUpdate(viewer)
+            break;
+        case "limit-earth":
+            limitEarthProcess(viewer)
+            break;
+        case "limit-radius":
+            limitRadiusProcess(viewer)
+            break;
+        case "limit-rectangle":
+            limittRectangleProcess(viewer)
+            break;
+        case "fogByDistance":
+            fogByDistanceProcess(viewer)
+            break;
+        case "fogByCenter":
+            fogByCenterProcess(viewer)
+            break;
+        case "fogLinear":
+            break;
+        case "fogExponent":
+            break;
+        case "snow":
+            break;
     }
+}
+
+//求取世界坐标
+const getWorldCoordinates = (viewer) => {
+    const fragmentShaderSource = `
+        uniform sampler2D colorTexture;
+        uniform sampler2D depthTexture;
+        in vec2 v_textureCoordinates;
+        void main(void) 
+        {
+            out_FragColor = texture(colorTexture, v_textureCoordinates);
+            float depth = czm_unpackDepth(texture(depthTexture, v_textureCoordinates));
+
+            vec4 eyeCoordinate4 = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth);
+            vec3 eyeCoordinate3 = eyeCoordinate4.xyz / eyeCoordinate4.w;
+            vec4 worldCoordinate4 = czm_inverseView * vec4(eyeCoordinate3, 1.0);
+            vec3 worldCoordinate = worldCoordinate4.xyz / worldCoordinate4.w;
+            out_FragColor.r = 1. - step(0.0, worldCoordinate.z);
+            out_FragColor.g = step(0.0, worldCoordinate.z);
+            // if (worldCoordinate.z < 0.0) {
+            //     out_FragColor.r = 1.;
+            // } else {
+            //     out_FragColor.g = 1.0;
+            //  }
+        }
+    `
+    const postProcessStage = viewer.scene.postProcessStages.add(
+        new Cesium.PostProcessStage({
+            fragmentShader: fragmentShaderSource
+        })
+    )
+    let position = Cesium.Cartesian3.fromDegrees(110, 0, 0)//赤道上的点
+    viewer.entities.add({
+        position: position,
+        point: {
+            pixelSize: 20,
+            color: Cesium.Color.BLUE
+        }
+    })
+}
+//着色器参数更新（更新颜色）
+// const shaderParamsUpdate = (viewer, color) => { 
+//     const fragmentShaderSource = `
+//         uniform sampler2D colorTexture;
+//         uniform sampler2D depthTexture;
+//         uniform vec4 u_color;
+//         in vec2 v_textureCoordinates;
+//         void main(void) 
+//         {
+//             out_FragColor = texture(colorTexture, v_textureCoordinates);
+//             float depth = czm_unpackDepth(texture(depthTexture, v_textureCoordinates));
+
+//             vec4 eyeCoordinate4 = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth);
+//             vec3 eyeCoordinate3 = eyeCoordinate4.xyz / eyeCoordinate4.w;
+//             vec4 worldCoordinate4 = czm_inverseView * vec4(eyeCoordinate3, 1.0);
+//             vec3 worldCoordinate = worldCoordinate4.xyz / worldCoordinate4.w;
+//             if (worldCoordinate.z > 0.0) {
+//                 out_FragColor.r = u_color.r;
+//             out_FragColor.g = u_color.g;
+//             out_FragColor.b = u_color.b;
+//             out_FragColor.a = u_color.a;
+//             }
+
+
+//         }
+//     `
+//     const postProcessStage = viewer.scene.postProcessStages.add(
+//         new Cesium.PostProcessStage({
+//             fragmentShader: fragmentShaderSource,
+//             uniforms: {
+//                 u_color: Cesium.Color.fromCssColorString('#ff0000')
+//             }
+//         })
+//     )
+//     let position = Cesium.Cartesian3.fromDegrees(110, 0, 0)//赤道上的点
+//     viewer.entities.add({
+//         position: position,
+//         point: {
+//             pixelSize: 20,
+//             color: Cesium.Color.BLUE
+//         }
+//     })
+// }
+//范围限制-地球
+const limitEarthProcess = (viewer) => {
+    const fragmentShaderSource = `
+        uniform sampler2D colorTexture;
+        uniform sampler2D depthTexture;
+        in vec2 v_textureCoordinates;
+        void main(void) 
+        {
+            out_FragColor = texture(colorTexture, v_textureCoordinates);
+            float depth = czm_unpackDepth(texture(depthTexture, v_textureCoordinates));
+            if (depth >= 1.0) {
+                return;
+            }
+            out_FragColor.r = 1.;
+        }
+    `
+    const postProcessStage = viewer.scene.postProcessStages.add(
+        new Cesium.PostProcessStage({
+            fragmentShader: fragmentShaderSource
+        })
+    )
+    let position = Cesium.Cartesian3.fromDegrees(110, 0, 0)//赤道上的点
+    viewer.entities.add({
+        position: position,
+        point: {
+            pixelSize: 20,
+            color: Cesium.Color.BLUE
+        }
+    })
+}
+//范围限制-半径
+const limitRadiusProcess = (viewer) => {
+    const fragmentShaderSource = `
+        uniform sampler2D colorTexture;
+        uniform sampler2D depthTexture;
+        in vec2 v_textureCoordinates;
+        uniform vec3 center;
+        uniform float radius;
+        void main(void) 
+        {
+            out_FragColor = texture(colorTexture, v_textureCoordinates);
+            float depth = czm_unpackDepth(texture(depthTexture, v_textureCoordinates));
+
+            vec4 eyeCoordinate4 = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth);
+            vec3 eyeCoordinate3 = eyeCoordinate4.xyz / eyeCoordinate4.w;
+            vec4 worldCoordinate4 = czm_inverseView * vec4(eyeCoordinate3, 1.0);
+            vec3 worldCoordinate = worldCoordinate4.xyz / worldCoordinate4.w;
+            if (distance(center, worldCoordinate) < radius) {
+                out_FragColor.r = 1.;
+            }
+        }
+    `
+    let position = Cesium.Cartesian3.fromDegrees(110, 0, 0)//赤道上的点
+    const postProcessStage = viewer.scene.postProcessStages.add(
+        new Cesium.PostProcessStage({
+            fragmentShader: fragmentShaderSource,
+            uniforms: {
+                center: position,
+                radius: 10000
+            }
+        })
+    )
+    // viewer.entities.add({
+    //     position: position,
+    //     point: {
+    //         pixelSize: 20,
+    //         color: Cesium.Color.BLUE
+    //     }
+    // })
+    viewer.camera.flyTo({
+        destination: position
+    })
+}
+//范围限制-矩形
+const limittRectangleProcess = (viewer) => {
+    let positions = [120, 30, 121, 30, 121, 31, 120, 31]
+    positions = Cesium.Cartesian3.fromDegreesArray(positions)
+    //建立局部坐标系，将所有点转到该坐标系下
+    let m = Cesium.Transforms.eastNorthUpToFixedFrame(positions[0])
+    let inverse = Cesium.Matrix4.inverse(m, new Cesium.Matrix4())
+    let localPositions = []
+    positions.forEach(position => {
+        localPositions.push(
+            Cesium.Matrix4.multiplyByPoint(
+                inverse,
+                position,
+                new Cesium.Cartesian3()
+            )
+        )
+    })
+    //计算局部坐标的矩形范围
+    let rect = Cesium.BoundingRectangle.fromPoints(localPositions, new Cesium.BoundingRectangle())
+    rect = new Cesium.Cartesian4(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height)
+    const fragmentShaderSource = `
+        uniform sampler2D colorTexture;
+        uniform sampler2D depthTexture;
+        in vec2 v_textureCoordinates;
+        uniform vec4 rect;
+        uniform mat4 inverse;
+        void main(void) 
+        {
+            out_FragColor = texture(colorTexture, v_textureCoordinates);
+            float depth = czm_unpackDepth(texture(depthTexture, v_textureCoordinates));
+            if (depth >= 1.0) return;
+            vec4 eyeCoordinate4 = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth);
+            vec3 eyeCoordinate3 = eyeCoordinate4.xyz / eyeCoordinate4.w;
+            vec4 worldCoordinate4 = czm_inverseView * vec4(eyeCoordinate3, 1.0);
+            vec3 worldCoordinate3 = worldCoordinate4.xyz / worldCoordinate4.w;
+            vec4 local = inverse * vec4(worldCoordinate3, 1.0);
+            local.z = 1.0;
+            //判断是否在rect中
+            if (local.x > rect.x && local.x < rect.z && local.y < rect.w && local.y > rect.y) {
+                out_FragColor.r = 1.;
+            }
+        }
+    `
+    const postProcessStage = new Cesium.PostProcessStage({
+        fragmentShader: fragmentShaderSource,
+        uniforms: {
+            inverse: inverse,
+            rect: rect
+        }
+    })
+    viewer.scene.postProcessStages.add(postProcessStage)
+    viewer.camera.flyTo({
+        destination: positions[0]
+    })
+}
+//根据相机距离雾化
+const fogByDistanceProcess = (viewer) => {
+    const fragmentShaderSource = `
+        float getDistance(sampler2D depthTexture, vec2 texCoords)
+        {
+            float depth = czm_unpackDepth(texture(depthTexture, texCoords));
+            if (depth == 0.0) {
+                return czm_infinity;
+            }   
+            vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth);
+            return -eyeCoordinate.z / eyeCoordinate.w;
+        }
+        float interpolateByDistance(vec4 nearFarScalar, float distance)
+        {
+            float startDistance = nearFarScalar.x;
+            float startValue = nearFarScalar.y;
+            float endDistance = nearFarScalar.z;
+            float endValue = nearFarScalar.w;
+            float t = clamp((distance - startDistance) / (endDistance - startDistance), 0.0, 1.0);
+            return mix(startValue, endValue, t);
+        }
+        vec4 alphaBlend(vec4 sourceColor, vec4 destinationColor)
+        {
+            return sourceColor * vec4(sourceColor.aaa, 1.0) + destinationColor * vec4(1.0 - sourceColor.a);
+        }
+        uniform sampler2D colorTexture;
+        uniform sampler2D depthTexture;
+        uniform vec4 fogByDistance;
+        uniform vec4 fogColor;
+        in vec2 v_textureCoordinates;
+        void main(void)
+        {
+            float distance = getDistance(depthTexture, v_textureCoordinates); //获取当前像素到相机的距离
+            vec4 sceneColor = texture(colorTexture, v_textureCoordinates); //场景原有的颜色
+            float blendAmout = interpolateByDistance(fogByDistance, distance); //根据距离计算雾化
+            vec4 finnalFogColor = vec4(fogColor.rgb, fogColor.a * blendAmout); //计算颜色
+            out_FragColor = alphaBlend(finnalFogColor, sceneColor); //混合场景原有的颜色和雾化颜色
+        }
+    `
+    const postProcessStage = new Cesium.PostProcessStage({
+        fragmentShader: fragmentShaderSource,
+        uniforms: {
+            fogByDistance: new Cesium.Cartesian4(100, 0.0, 10000, 1.0), //雾化参数10米的时候为0， 200米的时候完全雾化
+            fogColor: Cesium.Color.BLACK, //雾化的颜色，设置为黑色
+        }
+    })
+    viewer.scene.postProcessStages.add(postProcessStage)
 }
 </script>
 <style lang="less">

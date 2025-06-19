@@ -105,6 +105,23 @@ const btns = reactive([
     ]
   },
   {
+    label: "后处理",
+    name: "postProcessing",
+    contents: [
+      { id: "getWorldCoordinates", label: "求取世界坐标" },
+      { id: "shaderParamsUpdate", label: "着色器参数更新" },
+      { id: "limit-earth", label: "范围限制-地球" },
+      { id: "limit-radius", label: "范围限制-半径" },
+      { id: "limit-rectangle", label: "范围限制-矩形" },
+      { id: "fogByDistance", label: "根据相机距离雾化" },
+      { id: "fogByCenter", label: "距离中心雾化" },
+      { id: "fogLinear", label: "高度雾-线性高度" },
+      { id: "fogExponent", label: "高度雾-指数高度" },
+      { id: "snow", label: "积雪" },
+      { id: "removeEffect", label: "清除效果" },
+    ]
+  },
+  {
     label: "无人机漫游",
     name: "uavRoamingFly",
     contents: [
