@@ -122,6 +122,18 @@ const btns = reactive([
     ]
   },
   {
+    label: "Globe类",
+    name: "globalMaterial",
+    contents: [
+      { id: "elevationContour", label: "局部等高线" },
+      {id: "slopeRamp", label: "局部坡度"},
+      {id: "aspectRamp", label: "局部坡向"},
+      {id: "elevationRamp", label: "局部高程"},
+      {id: "discard", label: "裁剪"},
+      { id: "globalMaterialRemove", label: "清除全局材质" },
+    ]
+  },
+  {
     label: "无人机漫游",
     name: "uavRoamingFly",
     contents: [

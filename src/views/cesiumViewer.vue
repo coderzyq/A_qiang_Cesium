@@ -1,5 +1,5 @@
 <!--
- * @Description: 
+ * @Description:
  * @Author: A_qiang
  * @Date: 2023-06-06 21:17:52
  * @LastEditTime: 2023-01-21 19:14:02
@@ -35,6 +35,7 @@ let tilesetModel = null
 let rainObj = null
 onMounted(async () => {
     viewer = await initCesium("cesiumContainer");
+    viewer.scene.globe.depthTestAgainstTerrain = true;
     viewer1 = await initCesium("cesiumContainer1");
     tilesetModel = new Cesium.Cesium3DTileset({
         url: "/3dtiles/data/tileset.json"
@@ -480,6 +481,24 @@ const btnClick = (params) => {
             break;
         case "snow":
             break;
+        case "elevationContour":
+            elevationContour(viewer)
+            break;
+        case "slopeRamp":
+            slopeRamp(viewer)
+            break;
+        case "aspectRamp":
+            aspectRamp(viewer)
+            break;
+        case "elevationRamp":
+            elevationRamp(viewer)
+            break;
+        case "discard":
+            discard(viewer)
+            break;
+        case "globalMaterialRemove":
+            viewer.scene.globe.material = undefined
+            break;
     }
 }
 
@@ -489,7 +508,7 @@ const getWorldCoordinates = (viewer) => {
         uniform sampler2D colorTexture;
         uniform sampler2D depthTexture;
         in vec2 v_textureCoordinates;
-        void main(void) 
+        void main(void)
         {
             out_FragColor = texture(colorTexture, v_textureCoordinates);
             float depth = czm_unpackDepth(texture(depthTexture, v_textureCoordinates));
@@ -522,13 +541,13 @@ const getWorldCoordinates = (viewer) => {
     })
 }
 //着色器参数更新（更新颜色）
-// const shaderParamsUpdate = (viewer, color) => { 
+// const shaderParamsUpdate = (viewer, color) => {
 //     const fragmentShaderSource = `
 //         uniform sampler2D colorTexture;
 //         uniform sampler2D depthTexture;
 //         uniform vec4 u_color;
 //         in vec2 v_textureCoordinates;
-//         void main(void) 
+//         void main(void)
 //         {
 //             out_FragColor = texture(colorTexture, v_textureCoordinates);
 //             float depth = czm_unpackDepth(texture(depthTexture, v_textureCoordinates));
@@ -570,7 +589,7 @@ const limitEarthProcess = (viewer) => {
         uniform sampler2D colorTexture;
         uniform sampler2D depthTexture;
         in vec2 v_textureCoordinates;
-        void main(void) 
+        void main(void)
         {
             out_FragColor = texture(colorTexture, v_textureCoordinates);
             float depth = czm_unpackDepth(texture(depthTexture, v_textureCoordinates));
@@ -602,7 +621,7 @@ const limitRadiusProcess = (viewer) => {
         in vec2 v_textureCoordinates;
         uniform vec3 center;
         uniform float radius;
-        void main(void) 
+        void main(void)
         {
             out_FragColor = texture(colorTexture, v_textureCoordinates);
             float depth = czm_unpackDepth(texture(depthTexture, v_textureCoordinates));
@@ -663,7 +682,7 @@ const limittRectangleProcess = (viewer) => {
         in vec2 v_textureCoordinates;
         uniform vec4 rect;
         uniform mat4 inverse;
-        void main(void) 
+        void main(void)
         {
             out_FragColor = texture(colorTexture, v_textureCoordinates);
             float depth = czm_unpackDepth(texture(depthTexture, v_textureCoordinates));
@@ -700,7 +719,7 @@ const fogByDistanceProcess = (viewer) => {
             float depth = czm_unpackDepth(texture(depthTexture, texCoords));
             if (depth == 0.0) {
                 return czm_infinity;
-            }   
+            }
             vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth);
             return -eyeCoordinate.z / eyeCoordinate.w;
         }
@@ -739,6 +758,454 @@ const fogByDistanceProcess = (viewer) => {
         }
     })
     viewer.scene.postProcessStages.add(postProcessStage)
+}
+
+/**
+ * Globe类
+ * */
+//等高线（局部）
+const elevationContour = (viewer) => {
+    let positions = [
+        114.48165315948947, 26.88537765441287,
+        114.49059645844312, 26.886623091932666,
+        114.49046426464001, 26.894158820558456,
+        114.48015054916547, 26.89228862770083,
+    ];
+    positions = Cesium.Cartesian3.fromDegreesArray([].concat.apply([], positions));
+    //建立局部坐标系，将所有点转到该坐标系下
+    let m = Cesium.Transforms.eastNorthUpToFixedFrame(positions[0])
+    let inverse = Cesium.Matrix4.inverse(m, new Cesium.Matrix4())
+    let localPositions = []
+    positions.forEach(position => {
+        localPositions.push(
+            Cesium.Matrix4.multiplyByPoint(
+                inverse,
+                position,
+                new Cesium.Cartesian3()
+            )
+        )
+    })
+    //计算矩形范围
+    let rect = Cesium.BoundingRectangle.fromPoints(localPositions, new Cesium.BoundingRectangle())
+    rect = new Cesium.Cartesian4(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height)
+    Cesium.Material._materialCache._materials.ElevationContour.fabric.source = `
+        uniform vec4 color;
+        uniform float spacing;
+        uniform float width;
+        uniform vec4 rect;
+        uniform vec4 m_0;
+        uniform vec4 m_1;
+        uniform vec4 m_2;
+        uniform vec4 m_3;
+
+        czm_material czm_getMaterial(czm_materialInput materialInput) {
+            czm_material material = czm_getDefaultMaterial(materialInput);
+
+            float distanceToContour = mod(materialInput.height, spacing);
+
+            #if (__VERSION__ == 300 || defined(GL_OES_standard_derivatives))
+                float dxc = abs(dFdx(materialInput.height));
+                float dyc = abs(dFdy(materialInput.height));
+                float dF = max(dxc, dyc) * czm_pixelRatio * width;
+                float alpha = (distanceToContour < dF) ? 1.0 : 0.0;
+            #else
+                //If no derivatives are available (IE 10?), use pixel ratio
+                float alpha = (distanceToContour < (width * czm_pixelRatio)) ? 1.0 : 0.0;
+            #endif
+
+            vec4 outColor = czm_gammaCorrect(vec4(color.rgb, alpha * color.a));
+            material.diffuse = outColor.rgb;
+
+            mat4 m = mat4(m_0[0], m_0[1], m_0[2], m_0[3],
+                          m_1[0], m_1[1], m_1[2], m_1[3],
+                          m_2[0], m_2[1], m_2[2], m_2[3],
+                          m_3[0], m_3[1], m_3[2], m_3[3]);
+            vec4 eyeCoordinate4 = vec4(-materialInput.positionToEyeEC, 1.0);
+            vec4 worldCoordinate4 = czm_inverseView * eyeCoordinate4;
+            vec3 worldCoordinate = worldCoordinate4.xyz / worldCoordinate4.w;
+            vec4 local = m * vec4(worldCoordinate, 1.0);
+            material.alpha = 0.;
+            if(local.x>rect.x&&local.x<rect.z&&local.y<rect.w&&local.y>rect.y){
+                material.alpha = outColor.a;
+            }
+            return material;
+        }
+    `
+    let material = new Cesium.Material({
+        fabric: {
+            type: "ElevationContour",
+            uniforms: {
+                width: 1,
+                spacing: 20,
+                color: Cesium.Color.YELLOW,
+                rect: rect,
+                m_0: new Cesium.Cartesian4(inverse[0], inverse[1], inverse[2], inverse[3]),
+                m_1: new Cesium.Cartesian4(inverse[4], inverse[5], inverse[6], inverse[7]),
+                m_2: new Cesium.Cartesian4(inverse[8], inverse[9], inverse[10], inverse[11]),
+                m_3: new Cesium.Cartesian4(inverse[12], inverse[13], inverse[14], inverse[15]),
+            }
+        }
+    })
+    viewer.scene.globe.material = material;
+    viewer.camera.flyTo({
+        destination: positions[3]
+    })
+}
+//坡度（局部）
+const slopeRamp = (viewer) => {
+    let positions = [
+        114.48165315948947, 26.88537765441287,
+        114.49059645844312, 26.886623091932666,
+        114.49046426464001, 26.894158820558456,
+        114.48015054916547, 26.89228862770083,
+    ];
+    positions = Cesium.Cartesian3.fromDegreesArray([].concat.apply([], positions));
+    //建立局部坐标系，将所有点转到该坐标系下
+    let m = Cesium.Transforms.eastNorthUpToFixedFrame(positions[0])
+    let inverse = Cesium.Matrix4.inverse(m, new Cesium.Matrix4())
+    let localPositions = []
+    positions.forEach(position => {
+        localPositions.push(
+            Cesium.Matrix4.multiplyByPoint(
+                inverse,
+                position,
+                new Cesium.Cartesian3()
+            )
+        )
+    })
+    //计算矩形范围
+    let rect = Cesium.BoundingRectangle.fromPoints(localPositions, new Cesium.BoundingRectangle())
+    rect = new Cesium.Cartesian4(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height)
+    Cesium.Material._materialCache._materials.SlopeRamp.fabric.source = `
+        uniform sampler2D image;
+        uniform vec4 rect;
+        uniform vec4 m_0;
+        uniform vec4 m_1;
+        uniform vec4 m_2;
+        uniform vec4 m_3;
+
+        czm_material czm_getMaterial(czm_materialInput materialInput) {
+            czm_material material = czm_getDefaultMaterial(materialInput);
+
+            vec4 rampColor = texture(image, vec2(materialInput.slope / (czm_pi / 2.0), 0.5));
+            rampColor = czm_gammaCorrect(rampColor);
+            mat4 m = mat4(m_0[0], m_0[1], m_0[2], m_0[3],
+                          m_1[0], m_1[1], m_1[2], m_1[3],
+                          m_2[0], m_2[1], m_2[2], m_2[3],
+                          m_3[0], m_3[1], m_3[2], m_3[3]);
+            vec4 eyeCoordinate4 = vec4(-materialInput.positionToEyeEC, 1.0);
+            vec4 worldCoordinate4 = czm_inverseView * eyeCoordinate4;
+            vec3 worldCoordinate = worldCoordinate4.xyz / worldCoordinate4.w;
+            vec4 local = m * vec4(worldCoordinate, 1.0);
+            material.alpha = 0.;
+            material.diffuse = rampColor.rgb;
+            if(local.x>rect.x&&local.x<rect.z&&local.y<rect.w&&local.y>rect.y){
+                material.alpha = rampColor.a;
+            }
+            return material;
+        }
+    `
+    let material = new Cesium.Material({
+        fabric: {
+            type: "SlopeRamp",
+            uniforms: {
+                image: getColorRamp(),
+                rect: rect,
+                m_0: new Cesium.Cartesian4(inverse[0], inverse[1], inverse[2], inverse[3]),
+                m_1: new Cesium.Cartesian4(inverse[4], inverse[5], inverse[6], inverse[7]),
+                m_2: new Cesium.Cartesian4(inverse[8], inverse[9], inverse[10], inverse[11]),
+                m_3: new Cesium.Cartesian4(inverse[12], inverse[13], inverse[14], inverse[15]),
+            }
+        }
+    })
+    viewer.scene.globe.material = material;
+    viewer.camera.flyTo({
+        destination: positions[3]
+    })
+}
+//颜色带
+const getColorRamp = () => {
+
+    const ramp = document.createElement("canvas");
+    ramp.width = 100;
+    ramp.height = 1;
+    const ctx = ramp.getContext("2d");
+    let values = [0.0, 0.29, 0.5, Math.sqrt(2) / 2, 0.87, 0.91, 1.0];
+    const grd = ctx.createLinearGradient(0, 0, 100, 0);
+    grd.addColorStop(values[0], "#000000"); //black
+    grd.addColorStop(values[1], "#2747E0"); //blue
+    grd.addColorStop(values[2], "#D33B7D"); //pink
+    grd.addColorStop(values[3], "#D33038"); //red
+    grd.addColorStop(values[4], "#FF9742"); //orange
+    grd.addColorStop(values[5], "#ffd700"); //yellow
+    grd.addColorStop(values[6], "#ffffff"); //white
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 100, 1);
+    return ramp;
+}
+//坡向（局部）
+const aspectRamp = (viewer) => {
+    let positions = [
+        114.48165315948947, 26.88537765441287,
+        114.49059645844312, 26.886623091932666,
+        114.49046426464001, 26.894158820558456,
+        114.48015054916547, 26.89228862770083,
+    ];
+    positions = Cesium.Cartesian3.fromDegreesArray([].concat.apply([], positions));
+    //建立局部坐标系，将所有点转到该坐标系下
+    let m = Cesium.Transforms.eastNorthUpToFixedFrame(positions[0])
+    let inverse = Cesium.Matrix4.inverse(m, new Cesium.Matrix4())
+    let localPositions = []
+    positions.forEach(position => {
+        localPositions.push(
+            Cesium.Matrix4.multiplyByPoint(
+                inverse,
+                position,
+                new Cesium.Cartesian3()
+            )
+        )
+    })
+    //计算矩形范围
+    let rect = Cesium.BoundingRectangle.fromPoints(localPositions, new Cesium.BoundingRectangle())
+    rect = new Cesium.Cartesian4(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height)
+    Cesium.Material._materialCache._materials.AspectRamp.fabric.source = `
+        uniform sampler2D image;
+        uniform vec4 rect;
+        uniform vec4 m_0;
+        uniform vec4 m_1;
+        uniform vec4 m_2;
+        uniform vec4 m_3;
+
+        czm_material czm_getMaterial(czm_materialInput materialInput) {
+            czm_material material = czm_getDefaultMaterial(materialInput);
+
+            vec4 rampColor = texture(image, vec2(materialInput.aspect / (czm_pi * 2.0), 0.5));
+            rampColor = czm_gammaCorrect(rampColor);
+            mat4 m = mat4(m_0[0], m_0[1], m_0[2], m_0[3],
+                          m_1[0], m_1[1], m_1[2], m_1[3],
+                          m_2[0], m_2[1], m_2[2], m_2[3],
+                          m_3[0], m_3[1], m_3[2], m_3[3]);
+            vec4 eyeCoordinate4 = vec4(-materialInput.positionToEyeEC, 1.0);
+            vec4 worldCoordinate4 = czm_inverseView * eyeCoordinate4;
+            vec3 worldCoordinate = worldCoordinate4.xyz / worldCoordinate4.w;
+            vec4 local = m * vec4(worldCoordinate, 1.0);
+            material.alpha = 0.;
+            material.diffuse = rampColor.rgb;
+            if(local.x>rect.x&&local.x<rect.z&&local.y<rect.w&&local.y>rect.y){
+                material.alpha = rampColor.a;
+            }
+            return material;
+        }
+    `
+    let material = new Cesium.Material({
+        fabric: {
+            type: "AspectRamp",
+            uniforms: {
+                image: getColorRamp(),
+                rect: rect,
+                m_0: new Cesium.Cartesian4(inverse[0], inverse[1], inverse[2], inverse[3]),
+                m_1: new Cesium.Cartesian4(inverse[4], inverse[5], inverse[6], inverse[7]),
+                m_2: new Cesium.Cartesian4(inverse[8], inverse[9], inverse[10], inverse[11]),
+                m_3: new Cesium.Cartesian4(inverse[12], inverse[13], inverse[14], inverse[15]),
+            }
+        }
+    })
+    viewer.scene.globe.material = material;
+    viewer.camera.flyTo({
+        destination: positions[3]
+    })
+}
+//高程（局部）
+const elevationRamp = (viewer) => {
+    let positions = [
+        114.48165315948947, 26.88537765441287,
+        114.49059645844312, 26.886623091932666,
+        114.49046426464001, 26.894158820558456,
+        114.48015054916547, 26.89228862770083,
+    ];
+    positions = Cesium.Cartesian3.fromDegreesArray([].concat.apply([], positions));
+    //建立局部坐标系，将所有点转到该坐标系下
+    let m = Cesium.Transforms.eastNorthUpToFixedFrame(positions[0])
+    let inverse = Cesium.Matrix4.inverse(m, new Cesium.Matrix4())
+    let localPositions = []
+    positions.forEach(position => {
+        localPositions.push(
+            Cesium.Matrix4.multiplyByPoint(
+                inverse,
+                position,
+                new Cesium.Cartesian3()
+            )
+        )
+    })
+    //计算矩形范围
+    let rect = Cesium.BoundingRectangle.fromPoints(localPositions, new Cesium.BoundingRectangle())
+    rect = new Cesium.Cartesian4(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height)
+    Cesium.Material._materialCache._materials.ElevationRamp.fabric.source = `
+        uniform sampler2D image;
+        uniform vec4 rect;
+        uniform float minimumHeight;
+        uniform float maximumHeight;
+        uniform vec4 m_0;
+        uniform vec4 m_1;
+        uniform vec4 m_2;
+        uniform vec4 m_3;
+
+        czm_material czm_getMaterial(czm_materialInput materialInput) {
+            czm_material material = czm_getDefaultMaterial(materialInput);
+            float scaleHeight = clamp((materialInput.height - minimumHeight) / (maximumHeight - minimumHeight), 0.0, 1.0);
+            vec4 rampColor = texture(image, vec2(scaleHeight, 0.5));
+            rampColor = czm_gammaCorrect(rampColor);
+            mat4 m = mat4(m_0[0], m_0[1], m_0[2], m_0[3],
+                          m_1[0], m_1[1], m_1[2], m_1[3],
+                          m_2[0], m_2[1], m_2[2], m_2[3],
+                          m_3[0], m_3[1], m_3[2], m_3[3]);
+            vec4 eyeCoordinate4 = vec4(-materialInput.positionToEyeEC, 1.0);
+            vec4 worldCoordinate4 = czm_inverseView * eyeCoordinate4;
+            vec3 worldCoordinate = worldCoordinate4.xyz / worldCoordinate4.w;
+            vec4 local = m * vec4(worldCoordinate, 1.0);
+            material.alpha = 0.;
+            material.diffuse = rampColor.rgb;
+            if(local.x>rect.x&&local.x<rect.z&&local.y<rect.w&&local.y>rect.y){
+                material.alpha = rampColor.a;
+            }
+            return material;
+        }
+    `
+    let material = new Cesium.Material({
+        fabric: {
+            type: 'ElevationRamp',
+            uniforms: {
+                maximumHeight: 1000,
+                minimumHeight: 10,
+                image: getColorRamp(),
+                rect: rect,
+                m_0: new Cesium.Cartesian4(
+                    inverse[0],
+                    inverse[1],
+                    inverse[2],
+                    inverse[3]
+                ),
+                m_1: new Cesium.Cartesian4(
+                    inverse[4],
+                    inverse[5],
+                    inverse[6],
+                    inverse[7]
+                ),
+                m_2: new Cesium.Cartesian4(
+                    inverse[8],
+                    inverse[9],
+                    inverse[10],
+                    inverse[11]
+                ),
+                m_3: new Cesium.Cartesian4(
+                    inverse[12],
+                    inverse[13],
+                    inverse[14],
+                    inverse[15]
+                )
+            }
+        }
+    })
+    viewer.scene.globe.material = material
+    viewer.camera.flyTo({
+        destination: positions[3]
+    })
+}
+//裁剪（暂时只能是举行裁剪）
+const discard = (viewer) => {
+    let positions = [
+        114.48165315948947, 26.88537765441287,
+        114.49059645844312, 26.886623091932666,
+        114.49046426464001, 26.894158820558456,
+        114.48015054916547, 26.89228862770083,
+    ];
+    positions = Cesium.Cartesian3.fromDegreesArray([].concat.apply([], positions));
+    //建立局部坐标系，将所有点转到该坐标系下
+    let m = Cesium.Transforms.eastNorthUpToFixedFrame(positions[0])
+    let inverse = Cesium.Matrix4.inverse(m, new Cesium.Matrix4())
+    let localPositions = []
+    positions.forEach(position => {
+        localPositions.push(
+            Cesium.Matrix4.multiplyByPoint(
+                inverse,
+                position,
+                new Cesium.Cartesian3()
+            )
+        )
+    })
+    //计算矩形范围
+    let rect = Cesium.BoundingRectangle.fromPoints(localPositions, new Cesium.BoundingRectangle())
+    rect = new Cesium.Cartesian4(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height)
+    Cesium.Material._materialCache._materials.ElevationRamp.fabric.source = `
+        uniform sampler2D image;
+        uniform vec4 rect;
+        uniform float minimumHeight;
+        uniform float maximumHeight;
+        uniform vec4 m_0;
+        uniform vec4 m_1;
+        uniform vec4 m_2;
+        uniform vec4 m_3;
+
+        czm_material czm_getMaterial(czm_materialInput materialInput) {
+            czm_material material = czm_getDefaultMaterial(materialInput);
+            float scaleHeight = clamp((materialInput.height - minimumHeight) / (maximumHeight - minimumHeight), 0.0, 1.0);
+            vec4 rampColor = texture(image, vec2(scaleHeight, 0.5));
+            rampColor = czm_gammaCorrect(rampColor);
+            mat4 m = mat4(m_0[0], m_0[1], m_0[2], m_0[3],
+                          m_1[0], m_1[1], m_1[2], m_1[3],
+                          m_2[0], m_2[1], m_2[2], m_2[3],
+                          m_3[0], m_3[1], m_3[2], m_3[3]);
+            vec4 eyeCoordinate4 = vec4(-materialInput.positionToEyeEC, 1.0);
+            vec4 worldCoordinate4 = czm_inverseView * eyeCoordinate4;
+            vec3 worldCoordinate = worldCoordinate4.xyz / worldCoordinate4.w;
+            vec4 local = m * vec4(worldCoordinate, 1.0);
+            material.alpha = 0.;
+            material.diffuse = rampColor.rgb;
+            if(local.x>rect.x&&local.x<rect.z&&local.y<rect.w&&local.y>rect.y){
+                discard; //如果在矩形范围内则不渲染
+            }
+            return material;
+        }
+    `
+    let material = new Cesium.Material({
+        fabric: {
+            type: 'ElevationRamp',
+            uniforms: {
+                maximumHeight: 1000,
+                minimumHeight: 10,
+                image: getColorRamp(),
+                rect: rect,
+                m_0: new Cesium.Cartesian4(
+                    inverse[0],
+                    inverse[1],
+                    inverse[2],
+                    inverse[3]
+                ),
+                m_1: new Cesium.Cartesian4(
+                    inverse[4],
+                    inverse[5],
+                    inverse[6],
+                    inverse[7]
+                ),
+                m_2: new Cesium.Cartesian4(
+                    inverse[8],
+                    inverse[9],
+                    inverse[10],
+                    inverse[11]
+                ),
+                m_3: new Cesium.Cartesian4(
+                    inverse[12],
+                    inverse[13],
+                    inverse[14],
+                    inverse[15]
+                )
+            }
+        }
+    })
+    viewer.scene.globe.material = material
+    viewer.camera.flyTo({
+        destination: positions[3]
+    })
 }
 </script>
 <style lang="less">
