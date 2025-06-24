@@ -29,6 +29,7 @@ import RainEffect from "@/material/particleRain"
 import TerrainExcavation from "@/cesiumUtils/terrainClippe"
 import VisibilityAnalysis from "@/cesiumUtils/visibilityAnalysis";
 import CreateFrustum from "@/cesiumUtils/createFrustum";
+import { visibleCamera } from "@/shadowMap/shadowMap"
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
@@ -499,6 +500,16 @@ const btnClick = (params) => {
         case "globalMaterialRemove":
             viewer.scene.globe.material = undefined
             break;
+        case "enableCamera":
+            visibleCamera(viewer)
+            break;
+        case "visibilityAnalysis":
+            break
+        case "videoShadowMap":
+            break
+        case "disableShadowMap":
+            break
+
     }
 }
 

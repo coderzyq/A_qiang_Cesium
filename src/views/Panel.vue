@@ -126,11 +126,21 @@ const btns = reactive([
     name: "globalMaterial",
     contents: [
       { id: "elevationContour", label: "局部等高线" },
-      {id: "slopeRamp", label: "局部坡度"},
-      {id: "aspectRamp", label: "局部坡向"},
-      {id: "elevationRamp", label: "局部高程"},
-      {id: "discard", label: "裁剪"},
+      { id: "slopeRamp", label: "局部坡度" },
+      { id: "aspectRamp", label: "局部坡向" },
+      { id: "elevationRamp", label: "局部高程" },
+      { id: "discard", label: "裁剪" },
       { id: "globalMaterialRemove", label: "清除全局材质" },
+    ]
+  },
+  {
+    label: "阴影贴图",
+    name: "shadowMap",
+    contents: [
+      { id: "enableCamera", label: "可视化镜头" },
+      { id: "visibilityAnalysis", label: "可见性分析" },
+      { id: "videoShadowMap", label: "视频阴影贴图" },
+      { id: "disableShadowMap", label: "关闭阴影贴图" }
     ]
   },
   {
@@ -312,12 +322,14 @@ const handleChange = (val) => {
   border-top: 1px solid rgba(70, 131, 180, 0.596);
   border-bottom: 1px solid rgba(70, 131, 180, 0.596);
 }
+
 :deep(.el-collapse-item) {
   color: @color;
   background-color: @backgroundColor !important;
   font-size: 16px;
   width: @width;
 }
+
 :deep(.el-collapse-item__header) {
   color: @color;
   background-color: @backgroundColor !important;
