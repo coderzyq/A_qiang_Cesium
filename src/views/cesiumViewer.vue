@@ -30,6 +30,7 @@ import TerrainExcavation from "@/cesiumUtils/terrainClippe"
 import VisibilityAnalysis from "@/cesiumUtils/visibilityAnalysis";
 import CreateFrustum from "@/cesiumUtils/createFrustum";
 import { visibleCamera } from "@/shadowMap/shadowMap"
+import VisiblityShadowMap from "@/shadowMap/VisiblityShadowMap"
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
@@ -504,6 +505,7 @@ const btnClick = (params) => {
             visibleCamera(viewer)
             break;
         case "visibilityAnalysis":
+            new VisiblityShadowMap(viewer)
             break
         case "videoShadowMap":
             break
