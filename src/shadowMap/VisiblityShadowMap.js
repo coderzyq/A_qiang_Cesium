@@ -22,7 +22,9 @@ export default class VisiblityShadowMap {
 
     //添加倾斜摄影
     async addTileset() {
-        const tileset = await Cesium.Cesium3DTileset.fromUrl(this.url) 
+        const tileset = await Cesium.Cesium3DTileset.fromUrl(this.url)
+        console.log(tileset);
+        
         this.viewer.scene.primitives.add(tileset)
     }
     createLightCamera() { 
@@ -31,7 +33,7 @@ export default class VisiblityShadowMap {
         this.camera.frustum.far = 5000
         this.camera.frustum.fov = Cesium.Math.PI_OVER_THREE
         this.camera.setView({
-            destination: new Cesium.Cartesian3( -2307082.014701444, 5418677.990564013, 2440917.1505572563)
+            destination: Cesium.Cartesian3.fromDegrees(113.0625945534971, 22.646893657887965, 253.03951455221826),
         })
         this.cameraPrimitive = new Cesium.DebugCameraPrimitive({
             camera: this.camera,
