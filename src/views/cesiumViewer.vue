@@ -39,10 +39,10 @@ onMounted(async () => {
     viewer = await initCesium("cesiumContainer");
     viewer.scene.globe.depthTestAgainstTerrain = true;
     viewer1 = await initCesium("cesiumContainer1");
-    tilesetModel = new Cesium.Cesium3DTileset({
-        url: "/3dtiles/data/tileset.json"
-    });
-    viewer.scene.primitives.add(tilesetModel);
+    tilesetModel = await Cesium.Cesium3DTileset.fromUrl(
+        "/3dtiles/data/tileset.json"
+    );
+    
 })
 const dialogVisible = ref(false);
 let editB3dm = null
@@ -505,7 +505,12 @@ const btnClick = (params) => {
             visibleCamera(viewer)
             break;
         case "visibilityAnalysis":
-            new VisiblityShadowMap(viewer)
+    //         viewer.scene.primitives.add(tilesetModel);
+    // viewer.zoomTo(tilesetModel)
+            new VisiblityShadowMap(viewer, "/3dtiles/data/tileset.json")
+            viewer.camera.flyTo({
+                destination: new Cesium.Cartesian3( -2307082.014701444, 5418677.990564013, 2440717.1505572563),
+            })
             break
         case "videoShadowMap":
             break

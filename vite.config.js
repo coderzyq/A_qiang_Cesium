@@ -5,6 +5,7 @@ import path from 'path'
 
 export default defineConfig({
     plugins: [vue(),cesium()],
+    publicPath: '/',
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src")

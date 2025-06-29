@@ -1,7 +1,7 @@
 import * as Cesium from "cesium";
 
 export default class VisiblityShadowMap { 
-    constructor(viewer) { 
+    constructor(viewer, url) { 
         if (!viewer) {
             throw new Error("viewer is required");
         }
@@ -9,6 +9,9 @@ export default class VisiblityShadowMap {
         this.camera = viewer.camera;
         this.scene = viewer.scene;
         this.shadowMap = undefined;
+        this.url = url
+        //添加倾斜摄影
+        this.addTileset()
         //1.创建相机
         this.createLightCamera()
         //2.创建ShadowMap
@@ -17,13 +20,18 @@ export default class VisiblityShadowMap {
         this.createPostProcessStage()
     }
 
+    //添加倾斜摄影
+    async addTileset() {
+        const tileset = await Cesium.Cesium3DTileset.fromUrl(this.url) 
+        this.viewer.scene.primitives.add(tileset)
+    }
     createLightCamera() { 
         this.camera = new Cesium.Camera(this.scene)
         this.camera.frustum.near = 0.1
         this.camera.frustum.far = 5000
         this.camera.frustum.fov = Cesium.Math.PI_OVER_THREE
         this.camera.setView({
-            destination: Cesium.Cartesian3.fromDegrees(108.95978227580247,34.219412109275474,500.13537916051934)
+            destination: new Cesium.Cartesian3( -2307082.014701444, 5418677.990564013, 2440917.1505572563)
         })
         this.cameraPrimitive = new Cesium.DebugCameraPrimitive({
             camera: this.camera,
