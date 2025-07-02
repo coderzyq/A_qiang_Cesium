@@ -10,6 +10,14 @@ export default class VideoShadowMap {
       console.log("位置坐标错误");
       return;
     }
+
+    //创建视频ElementVideo
+    this.videoEle = this.activeVideo(this.options.url);
+    //创建相机视锥体
+    this.camera = this.createFrustum(this.viewer, option.position);
+    //创建ShadowMap
+    this.shadowMap = this.createShadowMap1();
+    
   }
 
   //初始化相机参数
@@ -172,7 +180,134 @@ export default class VideoShadowMap {
       isPointLight: !1,
       cascadesEnabled: !1,
     });
-    this.viewer.scene.shadowMap = shadowMap;
+    this.viewShadowMap = this.viewer.scene.shadowMap = shadowMap;
     return shadowMap;
   }
+
+  /**
+   * 添加后处理程序
+   */
+  addPostProcess() {
+    let fragmentShader = `
+       uniform sampler2D colorTexture;
+       in vec2 v_textureCoordinates;
+       uniform sampler2D depthTexture;
+
+       uniform sampler2D shadowMap_texture;
+       uniform sampler2D videoTexture;
+       uniform mat4 shadowMap_matrix;
+       uniform vec4 shadowMap_lightPositionEC;
+       uniform vec4 shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness;
+       uniform vec4 shadowMap_texelSizeDepthBiasAndNormalShadingSmooth;
+      //重写了czm_shadowVisibility方法
+       float _czm_shadowVisibility(sampler2D shadowMap, czm_shadowParameters shadowParameters)
+       {
+           float depthBias = shadowParameters.depthBias;
+           float depth = shadowParameters.depth;
+           float nDotL = shadowParameters.nDotL;
+           float normalShadingSmooth = shadowParameters.normalShadingSmooth;
+           float darkness = shadowParameters.darkness;
+           vec2 uv = shadowParameters.texCoords;
+           depth -= depthBias;
+           float visibility = czm_shadowDepthCompare(shadowMap, uv, depth);
+           return visibility;
+       }
+
+       void main() {
+           vec4 color = texture(colorTexture, v_textureCoordinates);
+           out_FragColor = texture(colorTexture, v_textureCoordinates);
+           float depth = czm_unpackDepth(texture(depthTexture, v_textureCoordinates));
+           if (depth >= 1.0) {
+               return;
+           }
+            //当前像素的坐标（相机坐标系）
+            vec4 eyeCoordinate4 = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth);
+            vec4 positionEC = eyeCoordinate4 /eyeCoordinate4.w;
+            //复制的源码开始
+            vec3 normalEC = vec3(1.);
+            czm_shadowParameters shadowParameters;
+            shadowParameters.texelStepSize = shadowMap_texelSizeDepthBiasAndNormalShadingSmooth.xy;
+            shadowParameters.depthBias = shadowMap_texelSizeDepthBiasAndNormalShadingSmooth.z;
+            shadowParameters.normalShadingSmooth = shadowMap_texelSizeDepthBiasAndNormalShadingSmooth.w;
+            shadowParameters.darkness = shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness.w;
+            shadowParameters.depthBias *= max(depth * .01, 1.);
+            vec3 directionEC = normalize(positionEC.xyz - shadowMap_lightPositionEC.xyz);
+           float nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0);
+
+           //作用是将视空间坐标转到阴影贴图的坐标(这里的转换结果就是所需要的阴影贴图坐标)
+           vec4 shadowPosition = shadowMap_matrix * positionEC;
+
+           shadowPosition /= shadowPosition.w;
+
+           if (any(lessThan(shadowPosition.xyz, vec3(0.0))) || any(greaterThan(shadowPosition.xyz, vec3(1.0))))
+           {
+               return;
+           }
+           shadowParameters.texCoords = shadowPosition.xy;
+           shadowParameters.depth = shadowPosition.z;
+           shadowParameters.nDotL = nDotL;
+           float visibility = _czm_shadowVisibility(shadowMap_texture, shadowParameters);
+           //复制的源码结束
+           if(visibility==1.){
+              //用shadowPosition对视频纹理数据采样
+              vec4 videoColor = texture(videoTexture, shadowPosition.xy);
+              out_FragColor = vec4(videoColor.xyz, 1.);
+           }
+   }
+   `;
+    let bias = this.viewShadowMap._primitiveBias;
+    let scratchTexelStepSize = new Cesium.Cartesian2();
+    let uniforms = {
+      videoTexture: () => {
+        return Cesium.Texture.create({
+          context: this.viewer.scene.context,
+          source: this.videoEle,
+          width: 1,
+          height: 1,
+          pixelFormat: Cesium.PixelFormat.RGBA,
+          pixelDatatype: Cesium.PixelDatatype.UNSIGNED_BYTE,
+        });
+        // return texture
+      },
+      shadowMap_texture: () => {
+        return this.viewShadowMap._shadowMapTexture;
+      },
+      shadowMap_matrix: () => {
+        return this.viewShadowMap._shadowMapMatrix;
+      },
+      shadowMap_lightPositionEC: () => {
+        return this.viewShadowMap._lightPositionEC;
+      },
+      shadowMap_texelSizeDepthBiasAndNormalShadingSmooth: () => {
+        var texelStepSize = scratchTexelStepSize;
+        texelStepSize.x = 1.0 / this.viewShadowMap._textureSize.x;
+        texelStepSize.y = 1.0 / this.viewShadowMap._textureSize.y;
+        return Cartesian4.fromElements(
+          texelStepSize.x,
+          texelStepSize.y,
+          bias.depthBias,
+          bias.normalShadingSmooth,
+          new Cesium.Cartesian4()
+        );
+      },
+      shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness: () => {
+        return Cartesian4.fromElements(
+          bias.normalOffsetScale,
+          this.viewShadowMap._distance,
+          this.viewShadowMap.maximumDistance,
+          this.viewShadowMap._darkness,
+          new Cesium.Cartesian4()
+        );
+      },
+    };
+    this.viewer.scene.postProcessStages.add(
+      new Cesium.PostProcessStage({
+        fragmentShader: fragmentShader,
+        uniforms: uniforms,
+      })
+    );
+  }
+
 }
+
+
