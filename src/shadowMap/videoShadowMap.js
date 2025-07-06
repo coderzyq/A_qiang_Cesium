@@ -5,28 +5,30 @@ export default class VideoShadowMap {
     this.viewer = viewer;
     this.options = options;
     this.CT = new ECEF();
-    let option = this.initCameraParam();
-    if (!option.cameraPosition || !option.position) {
+    this.option = this.initCameraParam();
+    if (!this.option.cameraPosition || !this.option.position) {
       console.log("位置坐标错误");
       return;
     }
 
     //创建视频ElementVideo
-    this.videoEle = this.activeVideo(this.options.url);
+    this.videoEle = this.activeElementVideo(this.options.url);
     //创建相机视锥体
-    this.camera = this.createFrustum(this.viewer, option.position);
+    this.camera = this.createFrustum(this.viewer, this.option.position);
     //创建ShadowMap
     this.shadowMap = this.createShadowMap1();
-    
+    //添加postprocess
+    this.addPostProcess();
   }
 
   //初始化相机参数
   initCameraParam() {
+    console.log(this.options.position);
     let viewPoint = this.CT.enu_to_ecef(
       {
         longitude: this.options.position.x * 1,
         latitude: this.options.position.y * 1,
-        height: this.options.position.z * 1,
+        altitude: this.options.position.z * 1,
       },
       {
         distance: this.options.far,
@@ -41,19 +43,19 @@ export default class VideoShadowMap {
       viewPoint.height
     );
     let cameraPosition = Cesium.Cartesian3.fromDegrees(
-        this.options.position.x * 1,
-        this.options.position.y * 1,
-        this.options.position.z * 1
-    )
+      this.options.position.x * 1,
+      this.options.position.y * 1,
+      this.options.position.z * 1
+    );
     return {
-        url: this.options.url,
-        cameraPosition: cameraPosition,
-        position: position,
-        alpha: this.options.alpha,
-        near: this.options.near,
-        far: this.options.far,
-        debugFrustum: this.options.debugFrustum
-    }
+      url: this.options.url,
+      cameraPosition: cameraPosition,
+      position: position,
+      alpha: this.options.alpha,
+      near: this.options.near,
+      far: this.options.far,
+      debugFrustum: this.options.debugFrustum,
+    };
   }
   //初始化相机
   initCamera() {
@@ -94,83 +96,103 @@ export default class VideoShadowMap {
   /**
    * 创建视频elementVideo
    */
-  activeElementVideo(videoUrl) { 
-
+  activeElementVideo(videoUrl) {
     let videoElement = document.createElement("video");
     videoElement.controls = true;
-    videoElement.autoplay = true;
-    videoElement.preload = "auto"
+    videoElement.autoplay = "autoplay";
+    videoElement.preload = "auto";
     videoElement.loop = true;
-    videoElement.muted = true
-    videoElement.style.cssText = "position:absolute;left:0px;top:0px;width:400px;height:400px;"
-    videoElement.style.visibility = "hidden"
+    videoElement.muted = true;
+    videoElement.style.cssText =
+      "position:absolute;left:0px;top:0px;width:400px;height:400px;";
+    videoElement.style.visibility = "hidden";
     document.body.appendChild(videoElement);
     let vId = new Date().getTime();
+    console.log(vId, "videoElement");
     videoElement.setAttribute("id", vId);
 
-    let player = videojs(vId);
-    player.ready(e => {
-        let sources = [
-            {
-                src: videoUrl,
-                type: "application/x-mpegURL"
-            }
-        ]
-        player.src(sources);
-        player.load();
-    })
-    return videoElement
+    setTimeout(() => {
+      try {
+        // 使用元素引用而非ID更可靠
+        const player = videojs(videoElement);
+
+        player.ready(() => {
+          player.src({
+            src: videoUrl,
+            type: "application/x-mpegURL", // HLS流
+          });
+          player.load();
+        });
+      } catch (error) {
+        console.error("VideoJS初始化失败:", error);
+      }
+    }, 0); // 延迟到下一个事件循环
+
+    return videoElement;
   }
 
   /**
    * 创建视频视锥体
    */
-  createFrustum() { 
+  createFrustum() {
     const camera = new Cesium.Camera(this.viewer.scene);
-    camera.frustum.fov = Cesium.Math.PI_OVER_THREE
+    camera.frustum.fov = Cesium.Math.PI_OVER_THREE;
     camera.frustum.near = 1;
     camera.frustum.far = 1000;
+    console.log(this.option);
     camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(this.position.lon, this.position.lat, this.position.height)
-    })
+      destination: Cesium.Cartesian3.fromDegrees(
+        this.options.position.x,
+        this.options.position.y,
+        this.options.position.z
+      ),
+    });
     const cameraPrimitive = new Cesium.DebugCameraPrimitive({
-        camera: camera,
-        color: Cesium.Color.RED,
-        show: true,
-        updateOnChange: true
-    })
-    this.viewer.scene.primitives.add(cameraPrimitive)
-    return camera
+      camera: camera,
+      color: Cesium.Color.RED,
+      show: true,
+      updateOnChange: true,
+    });
+    this.viewer.scene.primitives.add(cameraPrimitive);
+    return camera;
   }
 
   /**
    * 创建ShadowMap
    */
-  createShadowMap() { 
-    let camera = new Cesium.Camera(this.viewer.scene)
-    camera.position = this.cameraPosition
+  createShadowMap() {
+    let camera = new Cesium.Camera(this.viewer.scene);
+    camera.position = this.cameraPosition;
     //计算两个笛卡尔的组分差异
     camera.direction = Cesium.Cartesian3.subtract(
-        this.position, this.options.cameraPosition, new Cesium.Cartesian3()
-    )
-    camera.up = Cesium.Cartesian3.normalize(this.options.cameraPosition, new Cesium.Cartesian3())
-    let distance = Cesium.Cartesian3.distance(this.options.position, this.options.cameraPosition)
+      this.position,
+      this.options.cameraPosition,
+      new Cesium.Cartesian3()
+    );
+    camera.up = Cesium.Cartesian3.normalize(
+      this.options.cameraPosition,
+      new Cesium.Cartesian3()
+    );
+    let distance = Cesium.Cartesian3.distance(
+      this.options.position,
+      this.options.cameraPosition
+    );
 
     camera.frustum = new Cesium.PerspectiveFrustum({
-        fov: Cesium.Math.toRadians(this.options.fov),
-        aspectRatio: 1,
-        near: this.options.near,
-        far: distance
-    })
+      fov: Cesium.Math.toRadians(this.options.fov),
+      aspectRatio: 1,
+      near: this.options.near,
+      far: distance,
+    });
     this.viewShadowMap = new Cesium.ShadowMap({
-        lightCamera: camera,
-        enabled: false,
-        isPointLight: false,
-        isSpotLight: true,
-        cascadesEnabled: false,
-        context: this.viewer.scene.context,
-        pointLightRadius: distance
-    })
+      lightCamera: camera,
+      enabled: false,
+      isPointLight: false,
+      isSpotLight: true,
+      cascadesEnabled: false,
+      context: this.viewer.scene.context,
+      pointLightRadius: distance,
+    });
   }
   createShadowMap1() {
     const shadowMap = new Cesium.ShadowMap({
@@ -282,7 +304,7 @@ export default class VideoShadowMap {
         var texelStepSize = scratchTexelStepSize;
         texelStepSize.x = 1.0 / this.viewShadowMap._textureSize.x;
         texelStepSize.y = 1.0 / this.viewShadowMap._textureSize.y;
-        return Cartesian4.fromElements(
+        return Cesium.Cartesian4.fromElements(
           texelStepSize.x,
           texelStepSize.y,
           bias.depthBias,
@@ -291,7 +313,7 @@ export default class VideoShadowMap {
         );
       },
       shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness: () => {
-        return Cartesian4.fromElements(
+        return Cesium.Cartesian4.fromElements(
           bias.normalOffsetScale,
           this.viewShadowMap._distance,
           this.viewShadowMap.maximumDistance,
@@ -307,7 +329,4 @@ export default class VideoShadowMap {
       })
     );
   }
-
 }
-
-

@@ -31,6 +31,7 @@ import VisibilityAnalysis from "@/cesiumUtils/visibilityAnalysis";
 import CreateFrustum from "@/cesiumUtils/createFrustum";
 import { visibleCamera } from "@/shadowMap/shadowMap"
 import VisiblityShadowMap from "@/shadowMap/VisiblityShadowMap"
+import VideoShadowMap from "@/shadowMap/videoShadowMap"
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
@@ -513,6 +514,28 @@ const btnClick = (params) => {
             })
             break
         case "videoShadowMap":
+            new VideoShadowMap(viewer, {
+                url: "https://sf1-cdn-tos.huoshanstatic.com/obj/media-fe/xgplayer_doc_video/hls/xgplayer-demo.m3u8",
+                position: {
+                    x: 108.95941714166067,
+                    y: 34.219812715439865,
+                    z: 75.01781951233912
+                },
+                rotation: {
+                    x: -53,
+                    y: -36,
+                    z: 0
+                },
+                near: 0, 
+                far: 240,
+                fov: 12,
+                aspectRatio: 1,
+                alpha: 1,
+                debugFrustum: true
+            })
+            viewer.camera.setView({
+                destination: new Cesium.Cartesian3(108.95941714166067, 34.219812715439865, 75.01781951233912),
+            })
             break
         case "disableShadowMap":
             break
