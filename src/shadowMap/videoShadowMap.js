@@ -3,24 +3,33 @@ import ECEF from "../utils/ecef";
 export default class VideoShadowMap {
   constructor(viewer, options) {
     this.viewer = viewer;
+    this.scene = viewer.scene;
     this.options = options;
+    this.url = options.tileset
     this.CT = new ECEF();
     this.option = this.initCameraParam();
     if (!this.option.cameraPosition || !this.option.position) {
       console.log("位置坐标错误");
       return;
     }
-
+this.addTileset()
     //创建视频ElementVideo
     this.videoEle = this.activeElementVideo(this.options.url);
     //创建相机视锥体
-    this.camera = this.createFrustum(this.viewer, this.option.position);
+    this.camera = this.createFrustum(this.viewer, this.options.position);
     //创建ShadowMap
-    this.shadowMap = this.createShadowMap1();
-    //添加postprocess
+    this.shadowMap = this.createShadowMap();
+    // //添加postprocess
     this.addPostProcess();
   }
 
+//添加倾斜摄影
+    async addTileset() {
+        const tileset = await Cesium.Cesium3DTileset.fromUrl(this.url)
+        console.log(tileset);
+        
+        this.viewer.scene.primitives.add(tileset)
+    }
   //初始化相机参数
   initCameraParam() {
     console.log(this.options.position);
@@ -36,7 +45,6 @@ export default class VideoShadowMap {
         elevation: this.options.rotation.x * 1,
       }
     );
-    console.log(viewPoint, "viewPoint");
     let position = Cesium.Cartesian3.fromDegrees(
       viewPoint.longitude,
       viewPoint.latitude,
@@ -134,67 +142,30 @@ export default class VideoShadowMap {
   /**
    * 创建视频视锥体
    */
-  createFrustum() {
-    const camera = new Cesium.Camera(this.viewer.scene);
+  createFrustum(viewer, position) {
+    const camera = new Cesium.Camera(this.scene);
+    camera.frustum.near = 0.1;
+    camera.frustum.far = 200;
     camera.frustum.fov = Cesium.Math.PI_OVER_THREE;
-    camera.frustum.near = 1;
-    camera.frustum.far = 1000;
-    console.log(this.option);
     camera.setView({
       destination: Cesium.Cartesian3.fromDegrees(
-        this.options.position.x,
-        this.options.position.y,
-        this.options.position.z
+        113.0625945534971,
+        22.646893657887965,
+        253.03951455221826
       ),
     });
-    const cameraPrimitive = new Cesium.DebugCameraPrimitive({
+    this.cameraPrimitive = new Cesium.DebugCameraPrimitive({
       camera: camera,
       color: Cesium.Color.RED,
       show: true,
       updateOnChange: true,
     });
-    this.viewer.scene.primitives.add(cameraPrimitive);
+    viewer.scene.primitives.add(this.cameraPrimitive);
     return camera;
   }
 
-  /**
-   * 创建ShadowMap
-   */
+  
   createShadowMap() {
-    let camera = new Cesium.Camera(this.viewer.scene);
-    camera.position = this.cameraPosition;
-    //计算两个笛卡尔的组分差异
-    camera.direction = Cesium.Cartesian3.subtract(
-      this.position,
-      this.options.cameraPosition,
-      new Cesium.Cartesian3()
-    );
-    camera.up = Cesium.Cartesian3.normalize(
-      this.options.cameraPosition,
-      new Cesium.Cartesian3()
-    );
-    let distance = Cesium.Cartesian3.distance(
-      this.options.position,
-      this.options.cameraPosition
-    );
-
-    camera.frustum = new Cesium.PerspectiveFrustum({
-      fov: Cesium.Math.toRadians(this.options.fov),
-      aspectRatio: 1,
-      near: this.options.near,
-      far: distance,
-    });
-    this.viewShadowMap = new Cesium.ShadowMap({
-      lightCamera: camera,
-      enabled: false,
-      isPointLight: false,
-      isSpotLight: true,
-      cascadesEnabled: false,
-      context: this.viewer.scene.context,
-      pointLightRadius: distance,
-    });
-  }
-  createShadowMap1() {
     const shadowMap = new Cesium.ShadowMap({
       lightCamera: this.camera,
       context: this.viewer.scene.context,

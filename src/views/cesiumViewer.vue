@@ -515,11 +515,12 @@ const btnClick = (params) => {
             break
         case "videoShadowMap":
             new VideoShadowMap(viewer, {
+                tileset: "/3dtiles/data/tileset.json",
                 url: "https://sf1-cdn-tos.huoshanstatic.com/obj/media-fe/xgplayer_doc_video/hls/xgplayer-demo.m3u8",
                 position: {
-                    x: 108.95941714166067,
-                    y: 34.219812715439865,
-                    z: 75.01781951233912
+                    x: 113.0625945534971,
+                    y: 22.646893657887965,
+                    z: 253.03951455221826,
                 },
                 rotation: {
                     x: -53,
@@ -534,7 +535,9 @@ const btnClick = (params) => {
                 debugFrustum: true
             })
             viewer.camera.setView({
-                destination: new Cesium.Cartesian3(108.95941714166067, 34.219812715439865, 75.01781951233912),
+                destination: Cesium.Cartesian3.fromDegrees(113.0625945534971,
+        22.646893657887965,
+        253.03951455221826),
             })
             break
         case "disableShadowMap":
