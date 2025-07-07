@@ -49,6 +49,11 @@ const routes = [
     component: cesiumViewer,
   },
   {
+    name: "offScreenRender",
+    path: "/offScreenRender",
+    component: cesiumViewer,
+  },
+  {
     path: "/geoAnalysis",
     name: "geoAnalysis",
     component: cesiumViewer,

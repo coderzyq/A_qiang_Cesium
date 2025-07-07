@@ -32,6 +32,7 @@ import CreateFrustum from "@/cesiumUtils/createFrustum";
 import { visibleCamera } from "@/shadowMap/shadowMap"
 import VisiblityShadowMap from "@/shadowMap/VisiblityShadowMap"
 import VideoShadowMap from "@/shadowMap/videoShadowMap"
+import { createFrameBuffer, renderToFbo } from "@/offScreenRender/offScreenRender"
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
@@ -43,7 +44,7 @@ onMounted(async () => {
     tilesetModel = await Cesium.Cesium3DTileset.fromUrl(
         "/3dtiles/data/tileset.json"
     );
-    
+
 })
 const dialogVisible = ref(false);
 let editB3dm = null
@@ -158,7 +159,7 @@ let syncViewer = null
 let intervalId = null
 const viewerRef = ref(null)
 const viewer1Ref = ref(null)
-const btnClick = (params) => {
+const btnClick = async (params) => {
     const { id, step } = params;
     console.log(id, step);
     switch (id) {
@@ -506,11 +507,11 @@ const btnClick = (params) => {
             visibleCamera(viewer)
             break;
         case "visibilityAnalysis":
-    //         viewer.scene.primitives.add(tilesetModel);
-    // viewer.zoomTo(tilesetModel)
+            //         viewer.scene.primitives.add(tilesetModel);
+            // viewer.zoomTo(tilesetModel)
             new VisiblityShadowMap(viewer, "/3dtiles/data/tileset.json")
             viewer.camera.flyTo({
-                destination: new Cesium.Cartesian3( -2307082.014701444, 5418677.990564013, 2440717.1505572563),
+                destination: new Cesium.Cartesian3(-2307082.014701444, 5418677.990564013, 2440717.1505572563),
             })
             break
         case "videoShadowMap":
@@ -527,7 +528,7 @@ const btnClick = (params) => {
                     y: -36,
                     z: 0
                 },
-                near: 0, 
+                near: 0,
                 far: 240,
                 fov: 12,
                 aspectRatio: 1,
@@ -536,11 +537,65 @@ const btnClick = (params) => {
             })
             viewer.camera.setView({
                 destination: Cesium.Cartesian3.fromDegrees(113.0625945534971,
-        22.646893657887965,
-        253.03951455221826),
+                    22.646893657887965,
+                    253.03951455221826),
             })
             break
         case "disableShadowMap":
+            viewer.scene.postProcessStages.destroy()
+            break
+        case "flyToEnd":
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(113.0625945534971, 22.646893657887965, 253.03951455221826)
+            })
+            const tileset = await Cesium.Cesium3DTileset.fromUrl("/3dtiles/data/tileset.json")
+            viewer.scene.primitives.add(tileset)
+            break
+        case "fbo":
+            //添加倾斜摄影
+
+            const fbo = createFrameBuffer(viewer.scene.context)
+            renderToFbo(fbo, viewer.scene)
+            console.log(fbo);
+            //可视化fbo（通过立方体）
+            let colorTexture = Cesium.Texture.fromFramebuffer({
+                context: viewer.scene.context,
+                framebuffer: fbo
+            })
+            colorTexture.type = 'sampler2D';
+            const box = Cesium.BoxGeometry.fromDimensions({
+                dimensions: new Cesium.Cartesian3(400.0, 400.0, 400.0)
+            })
+            const instance = new Cesium.GeometryInstance({
+                geometry: box,
+                modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
+                    Cesium.Cartesian3.fromDegrees(113.0625945534971, 22.646893657887965, 353.03951455221826)
+                )
+            })
+            viewer.scene.primitives.add(
+                new Cesium.Primitive({
+                    geometryInstances: instance,
+                    appearance: new Cesium.MaterialAppearance({
+                        material: new Cesium.Material({
+                            fabric: {
+                                type: 'FBO',
+                                uniforms: {
+                                    image: colorTexture
+                                }
+                            }
+                        }),
+                        fragmentShaderSource: `
+                            in vec3 v_positionEC;
+                            in vec4 v_normalEC;
+                            in vec2 v_st;
+                            void main() {
+                                out_FragColor = texture(image_0, v_st);
+                            }
+                        `
+                    }),
+                    asynchronous: false
+                }),
+            )
             break
 
     }
