@@ -150,7 +150,7 @@ const btns = reactive([
       {id: "flyToEnd", label: '镜头飞到终点'},
       {id: "fbo", label: '可视化FBO'},
       {id: 'fbo_canvas', label: '可视化FBO-Canvas'},
-      {id: 'fb0_canvas_render', label: "可视化FBO-Canvas-实时渲染"},
+      {id: 'fbo_canvas_render', label: "可视化FBO-Canvas-实时渲染"},
       {id: "custom_offScreenReder", label: "自定义离屏渲染"},
       {id: 'hidden_context', label: "隐藏不必要的内容"},
       {id: "roomIn", label: "室内查看"}

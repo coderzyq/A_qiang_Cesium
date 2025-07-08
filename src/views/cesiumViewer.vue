@@ -7,6 +7,7 @@
 -->
 <template>
     <div id="container">
+        <canvas id="canvas" style="width: '30%';position: absolute;z-index: 2;top: '0px';right: '0px';"></canvas>
         <div id="cesiumContainer" ref="viewerRef"></div>
         <!-- <div id="cesiumContainer1" ref="viewer1Ref"></div> -->
         <Panel v-model:visible="dialogVisible" @btnClick="btnClick"></Panel>
@@ -160,6 +161,7 @@ let intervalId = null
 const viewerRef = ref(null)
 const viewer1Ref = ref(null)
 const btnClick = async (params) => {
+    let fbo = null
     const { id, step } = params;
     console.log(id, step);
     switch (id) {
@@ -548,13 +550,12 @@ const btnClick = async (params) => {
             viewer.camera.flyTo({
                 destination: Cesium.Cartesian3.fromDegrees(113.0625945534971, 22.646893657887965, 253.03951455221826)
             })
+            //添加倾斜摄影
             const tileset = await Cesium.Cesium3DTileset.fromUrl("/3dtiles/data/tileset.json")
             viewer.scene.primitives.add(tileset)
             break
         case "fbo":
-            //添加倾斜摄影
-
-            const fbo = createFrameBuffer(viewer.scene.context)
+            fbo = createFrameBuffer(viewer.scene.context)
             renderToFbo(fbo, viewer.scene)
             console.log(fbo);
             //可视化fbo（通过立方体）
@@ -596,8 +597,58 @@ const btnClick = async (params) => {
                     asynchronous: false
                 }),
             )
-            break
+            break;
+        case "fbo_canvas":
+            fbo = createFrameBuffer(viewer.scene.context)
+            renderToFbo(fbo, viewer.scene)
+            let width = viewer.scene.context.drawingBufferWidth;
+            let height = viewer.scene.context.drawingBufferHeight;
+            let pixels = viewer.scene.context.readPixels({
+                x: 0,
+                y: 0,
+                width: width,
+                height: height,
+                framebuffer: fbo
+            })
+            //创建canvas
+            const canvas = document.getElementById('canvas');
+            let imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
+            let ctx = canvas.getContext('2d');
+            ctx?.putImageData(imageData, 0, 0, 0, 0, width, height);
+            //翻转
+            ctx.translate(0, height);
+            ctx.scale(1, -1);
+            ctx.drawImage(canvas, 0, 0);
+            canvas.style.height = (height * 0.3) + 'px';
+            canvas.style.width = (width * 0.3) + 'px';
+            break;
+        case "fbo_canvas_render":
+            fbo = createFrameBuffer(viewer.scene.context)
+            viewer.scene.preRender.addEventListener((scene, time) => {
 
+                renderToFbo(fbo, viewer.scene)
+                let width = viewer.scene.context.drawingBufferWidth;
+                let height = viewer.scene.context.drawingBufferHeight;
+                let pixels = viewer.scene.context.readPixels({
+                    x: 0,
+                    y: 0,
+                    width: width,
+                    height: height,
+                    framebuffer: fbo
+                })
+                //创建canvas
+                const canvas = document.getElementById('canvas');
+                let imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
+                let ctx = canvas.getContext('2d');
+                ctx?.putImageData(imageData, 0, 0, 0, 0, width, height);
+                //翻转
+                ctx.translate(0, height);
+                ctx.scale(1, -1);
+                ctx.drawImage(canvas, 0, 0);
+                canvas.style.height = (height * 0.3) + 'px';
+                canvas.style.width = (width * 0.3) + 'px';
+            })
+            break
     }
 }
 
