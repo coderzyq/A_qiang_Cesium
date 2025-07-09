@@ -33,7 +33,7 @@ import CreateFrustum from "@/cesiumUtils/createFrustum";
 import { visibleCamera } from "@/shadowMap/shadowMap"
 import VisiblityShadowMap from "@/shadowMap/VisiblityShadowMap"
 import VideoShadowMap from "@/shadowMap/videoShadowMap"
-import { createFrameBuffer, renderToFbo } from "@/offScreenRender/offScreenRender"
+import { createFrameBuffer, renderToFbo, createFboCamera, renderToFboCamera } from "@/offScreenRender/offScreenRender"
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
@@ -648,7 +648,32 @@ const btnClick = async (params) => {
                 canvas.style.height = (height * 0.3) + 'px';
                 canvas.style.width = (width * 0.3) + 'px';
             })
-            break
+            break;
+        case "custom_camera_offScreenReder":
+            let fboCamera = createFboCamera(viewer.scene, Cesium.Cartesian3.fromDegrees(113.0625945534971, 36.646893657887965, 253.03951455221826))
+            let fbo = createFrameBuffer(viewer.scene.context)
+            renderToFboCamera(fbo, viewer.scene, fboCamera)
+            let width1 = viewer.scene.context.drawingBufferWidth;
+            let height1 = viewer.scene.context.drawingBufferHeight;
+            let pixel = viewer.scene.context.readPixels({
+                x: 0,
+                y: 0,
+                width: width1,
+                height: height1,
+                framebuffer: fbo
+            });
+            const canvas1 = document.getElementById('canvas');
+            let imageData1 = new ImageData(new Uint8ClampedArray(pixel), width1, height1);
+            let ctx1 = canvas1.getContext('2d');
+            ctx1?.putImageData(imageData1, 0, 0, 0, 0, width1, height1);
+            //翻转
+            // ctx1.translate(0, height1);
+            // ctx1.scale(1, -1);
+            ctx1.drawImage(canvas1, 0, 0);
+            canvas1.style.height = '400px';
+            canvas1.style.width = '400px';
+
+            break;
     }
 }
 
