@@ -19,6 +19,7 @@ import { ref, onMounted } from "vue";
 import Panel from "@/views/Panel.vue";
 import * as Cesium from "cesium"
 import "cesium/Source/Widgets/widgets.css"
+import * as dat from "dat.gui"
 import initCesium from "@/cesiumUtils/initCesium"
 import EditB3DM from "@/cesiumUtils/EditB3DM";
 import PolylineImageTrailMaterialProperty from "@/cesiumUtils/ImageMaterial"
@@ -650,28 +651,64 @@ const btnClick = async (params) => {
             })
             break;
         case "custom_camera_offScreenReder":
-            let fboCamera = createFboCamera(viewer.scene, Cesium.Cartesian3.fromDegrees(113.0625945534971, 36.646893657887965, 253.03951455221826))
+            const gui = new dat.GUI();
+            const fold = gui.addFolder('自定义相机');
+            const cameraOption = {
+                heading: 10.0,
+                pitch: 0.0,
+                roll: 0.0,
+            }
+            const updateCamera = () => {
+                fboCamera.setView({
+                    destination: Cesium.Cartesian3.fromDegrees(113.0625945534971, 22.646893657887965, 253.03951455221826),
+                    orientation: {
+                        heading: Cesium.Math.toRadians(cameraOption.heading),
+                        pitch: Cesium.Math.toRadians(cameraOption.pitch),
+                        roll: Cesium.Math.toRadians(cameraOption.roll),
+
+                    }
+                })
+            }
+
+
+
+            let fboCamera = createFboCamera(viewer.scene, Cesium.Cartesian3.fromDegrees(113.0625945534971, 22.646893657887965, 253.03951455221826))
             let fbo = createFrameBuffer(viewer.scene.context)
-            renderToFboCamera(fbo, viewer.scene, fboCamera)
-            let width1 = viewer.scene.context.drawingBufferWidth;
-            let height1 = viewer.scene.context.drawingBufferHeight;
-            let pixel = viewer.scene.context.readPixels({
-                x: 0,
-                y: 0,
-                width: width1,
-                height: height1,
-                framebuffer: fbo
-            });
-            const canvas1 = document.getElementById('canvas');
-            let imageData1 = new ImageData(new Uint8ClampedArray(pixel), width1, height1);
-            let ctx1 = canvas1.getContext('2d');
-            ctx1?.putImageData(imageData1, 0, 0, 0, 0, width1, height1);
-            //翻转
-            // ctx1.translate(0, height1);
-            // ctx1.scale(1, -1);
-            ctx1.drawImage(canvas1, 0, 0);
-            canvas1.style.height = '400px';
-            canvas1.style.width = '400px';
+            fold.add(cameraOption, 'heading', 0, 360).onChange((value) => {
+                console.log(value);
+                updateCamera()
+            })
+            fold.add(cameraOption, 'pitch', -90.0, 90.0).onChange((value) => {
+                updateCamera()
+            })
+            fold.add(cameraOption, 'roll', -180.0, 180.0).onChange(() => {
+                updateCamera()
+            })
+            viewer.scene.preRender.addEventListener((scene, time) => {
+                renderToFboCamera(fbo, viewer.scene, fboCamera)
+                let width1 = viewer.scene.context.drawingBufferWidth;
+                let height1 = viewer.scene.context.drawingBufferHeight;
+                let pixel = viewer.scene.context.readPixels({
+                    x: 0,
+                    y: 0,
+                    width: width1,
+                    height: height1,
+                    framebuffer: fbo
+                });
+                const canvas1 = document.getElementById('canvas');
+                let imageData1 = new ImageData(new Uint8ClampedArray(pixel), width1, height1);
+                let ctx1 = canvas1.getContext('2d');
+                ctx1?.putImageData(imageData1, 0, 0, 0, 0, width1, height1);
+                //翻转
+                // ctx1.translate(0, height1);
+                // ctx1.scale(1, -1);
+                ctx1.drawImage(canvas1, 0, 0);
+                canvas1.style.height = '400px';
+                canvas1.style.width = '400px';
+
+
+            })
+
 
             break;
     }

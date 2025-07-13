@@ -153,7 +153,8 @@ const btns = reactive([
       {id: 'fbo_canvas_render', label: "可视化FBO-Canvas-实时渲染"},
       {id: "custom_camera_offScreenReder", label: "自定义相机离屏渲染"},
       {id: 'hidden_context', label: "隐藏不必要的内容"},
-      {id: "roomIn", label: "室内查看"}
+      {id: "roomIn", label: "室内查看"},
+      {id: "pickDepth", label: "深度图解析" }
     ]
   },
   {
