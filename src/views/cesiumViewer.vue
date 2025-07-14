@@ -35,6 +35,7 @@ import { visibleCamera } from "@/shadowMap/shadowMap"
 import VisiblityShadowMap from "@/shadowMap/VisiblityShadowMap"
 import VideoShadowMap from "@/shadowMap/videoShadowMap"
 import { createFrameBuffer, renderToFbo, createFboCamera, renderToFboCamera } from "@/offScreenRender/offScreenRender"
+import {getDepth1} from "@/offScreenRender/depth"
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
@@ -708,9 +709,10 @@ const btnClick = async (params) => {
 
 
             })
-
-
             break;
+        case "pickDepth":
+            getDepth1(viewer)
+            break
     }
 }
 
