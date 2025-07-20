@@ -20,6 +20,7 @@ import Panel from "@/views/Panel.vue";
 import * as Cesium from "cesium"
 import "cesium/Source/Widgets/widgets.css"
 import * as dat from "dat.gui"
+import { ElMessage } from "element-plus";
 import initCesium from "@/cesiumUtils/initCesium"
 import EditB3DM from "@/cesiumUtils/EditB3DM";
 import PolylineImageTrailMaterialProperty from "@/cesiumUtils/ImageMaterial"
@@ -35,7 +36,7 @@ import { visibleCamera } from "@/shadowMap/shadowMap"
 import VisiblityShadowMap from "@/shadowMap/VisiblityShadowMap"
 import VideoShadowMap from "@/shadowMap/videoShadowMap"
 import { createFrameBuffer, renderToFbo, createFboCamera, renderToFboCamera } from "@/offScreenRender/offScreenRender"
-import {getDepth1} from "@/offScreenRender/depth"
+import { getDepth1 } from "@/offScreenRender/depth"
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
@@ -43,7 +44,7 @@ let rainObj = null
 onMounted(async () => {
     viewer = await initCesium("cesiumContainer");
     viewer.scene.globe.depthTestAgainstTerrain = true;
-    viewer1 = await initCesium("cesiumContainer1");
+    // viewer1 = await initCesium("cesiumContainer1");
     tilesetModel = await Cesium.Cesium3DTileset.fromUrl(
         "/3dtiles/data/tileset.json"
     );
@@ -51,7 +52,7 @@ onMounted(async () => {
 })
 const dialogVisible = ref(false);
 let editB3dm = null
-let trailPolyline = undefined
+let trailPolyline = undefined;
 //动态轨迹线（图片）
 const imageProperty = async (viewer) => {
     trailPolyline = viewer.entities.add({
@@ -712,7 +713,13 @@ const btnClick = async (params) => {
             break;
         case "pickDepth":
             getDepth1(viewer)
-            break
+            break;
+        default:
+            ElMessage({
+                message: "正在开发中",
+                type: "warning"
+            })
+            break;
     }
 }
 

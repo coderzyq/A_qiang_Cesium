@@ -40,37 +40,46 @@ export const getDepth1 = (viewer) => {
   viewer.entities.add(entity);
   viewer.zoomTo(entity);
 
-  setTimeout(() => {
+  
     //创建Picking类的离屏渲染相机
-    //计算这个范围的四至，形成一个盒子，这个盒子即是我们的视角
-    const boundingRectangles = Cesium.BoundingRectangle.fromRectangle(
-      Cesium.Rectangle.fromCartesianArray(positions)
-    );
-    const range = Math.max(boundingRectangles.width, boundingRectangles.height); //宽高的最大值
+  //计算这个范围的四至，形成一个盒子，这个盒子即是我们的视角
+  const boundingRectangles = Cesium.BoundingRectangle.fromRectangle(
+    Cesium.Rectangle.fromCartesianArray(positions)
+  );
+  const range = Math.max(boundingRectangles.width, boundingRectangles.height); //宽高的最大值
 
-    const offscreenCamera = createOffscreenCamera(positions, viewer, range);
+  const offscreenCamera = createOffscreenCamera(positions, viewer, range);
 
-    const picking = createPicking(viewer, offscreenCamera);
-
-    const positionsDepth = offscreenRender(
-      viewer,
-      offscreenCamera,
-      picking,
-      range
-    );
-pointIsInPolygon(positionsDepth, )
-    //将结果positions渲染出来
-    const pointPrimitives = viewer.scene.primitives.add(
-      new Cesium.PointPrimitiveCollection()
-    );
-    positionsDepth.forEach((position) => {
-      pointPrimitives.add({
-        pixelSize: 5,
-        color: Cesium.Color.GREEN,
-        position,
-      });
+  // const picking = createPicking(viewer, offscreenCamera);
+  const picking = new Cesium.Picking(viewer.scene);
+  const view = picking._pickOffscreenView;
+  const boundingRectangle = new Cesium.BoundingRectangle(0, 0, 1024, 1024);
+  view.viewport = boundingRectangle;
+  view.passState.viewport = boundingRectangle;
+  view.camera = offscreenCamera;
+  console.log(picking);
+  // viewer.camera = offscreenCamera;
+setTimeout(() => {
+  const positionsDepth = offscreenRender(
+    viewer,
+    offscreenCamera,
+    picking,
+    range
+  );
+  // pointIsInPolygon(positionsDepth, )
+  //将结果positions渲染出来
+  const pointPrimitives = viewer.scene.primitives.add(
+    new Cesium.PointPrimitiveCollection()
+  );
+  console.log(positionsDepth);
+  positionsDepth.forEach((position) => {
+    pointPrimitives.add({
+      pixelSize: 5,
+      color: Cesium.Color.GREEN,
+      position,
     });
-  }, 10000);
+  });
+  },2000)
 };
 
 //一般使用正交相机，将相机置于盒子的上空
@@ -114,14 +123,14 @@ const createOffscreenCamera = (positions, viewer, range) => {
     far: 10000,
   });
   //可视化相机
-  viewer.scene.primitives.add(
-    new Cesium.DebugCameraPrimitive({
-      camera: offscreenCamera,
-      color: Cesium.Color.BLUE,
-      updateOnChange: false, //不更新
-      show: true,
-    })
-  );
+  // viewer.scene.primitives.add(
+  //   new Cesium.DebugCameraPrimitive({
+  //     camera: offscreenCamera,
+  //     color: Cesium.Color.BLUE,
+  //     updateOnChange: false, //不更新
+  //     // show: true,
+  //   })
+  // );
 
   return offscreenCamera;
 };

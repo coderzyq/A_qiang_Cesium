@@ -231,6 +231,7 @@ const btnClick = (item) => {
   } else {
     item.step = valueExa.value
   }
+  toggle()
   emit("btnClick", { ...item })
 }
 const toggle = () => {
