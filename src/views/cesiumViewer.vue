@@ -7,8 +7,9 @@
 -->
 <template>
     <div id="container">
-        <canvas id="canvas" style="width: '30%';position: absolute;z-index: 2;top: '0px';right: '0px';"></canvas>
+        <!-- <canvas id="canvas" style="width: '30%';position: absolute;z-index: 2;top: '0px';right: '0px';"></canvas> -->
         <div id="cesiumContainer" ref="viewerRef"></div>
+        <!-- <div id="tree-root" class="tree"></div> -->
         <!-- <div id="cesiumContainer1" ref="viewer1Ref"></div> -->
         <Panel v-model:visible="dialogVisible" @btnClick="btnClick"></Panel>
     </div>
@@ -37,10 +38,12 @@ import VisiblityShadowMap from "@/shadowMap/VisiblityShadowMap"
 import VideoShadowMap from "@/shadowMap/videoShadowMap"
 import { createFrameBuffer, renderToFbo, createFboCamera, renderToFboCamera } from "@/offScreenRender/offScreenRender"
 import { getDepth1 } from "@/offScreenRender/depth"
+import ContextMenu from "@/cesiumUtils/ContextMenu/ContextMenu"
 let viewer = null;
 let viewer1 = null;
 let tilesetModel = null
 let rainObj = null
+let handler = null
 onMounted(async () => {
     viewer = await initCesium("cesiumContainer");
     viewer.scene.globe.depthTestAgainstTerrain = true;
@@ -48,7 +51,22 @@ onMounted(async () => {
     tilesetModel = await Cesium.Cesium3DTileset.fromUrl(
         "/3dtiles/data/tileset.json"
     );
-
+    const contextMenu =new ContextMenu(viewer, "cesiumContainer")
+    contextMenu.defaultContextMenu()
+    contextMenu.bindContextMenu()
+    // handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
+    // //鼠标左键单击事件
+    // handler.setInputAction(e => {
+    //    let pick = viewer.scene.pick(e.position)
+    // }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+    // //鼠标移动事件
+    // handler.setInputAction(e => { 
+    //     let pickedObject = viewer.scene.pick(e.endPosition)
+    // }, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
+    // //鼠标右键单击事件
+    // handler.setInputAction(e => { 
+    //     let pickedObject = viewer.scene.pick(e.position)
+    // }, Cesium.ScreenSpaceEventType.RIGHT_CLICK)
 })
 const dialogVisible = ref(false);
 let editB3dm = null
