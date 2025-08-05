@@ -53,7 +53,7 @@ onMounted(async () => {
     );
     const contextMenu =new ContextMenu(viewer, "cesiumContainer")
     contextMenu.defaultContextMenu()
-    contextMenu.bindContextMenu()
+    // contextMenu.bindContextMenu()
     // handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas)
     // //鼠标左键单击事件
     // handler.setInputAction(e => {

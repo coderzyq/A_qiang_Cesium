@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@turf/turf": "^7.2.0",
     "cesium": "^1.130.0",
     "dat.gui": "^0.7.9",
     "element-plus": "^2.10.1",

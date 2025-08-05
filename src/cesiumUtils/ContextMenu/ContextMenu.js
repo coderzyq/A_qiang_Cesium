@@ -4,6 +4,14 @@
  */
 import "./style.css";
 import * as Cesium from "cesium";
+import { ElMessage } from "element-plus";
+import {
+  getCameraParams,
+  copyContext,
+  getCartesian3FromPX,
+  getScreenshot,
+} from "../cesiumUtil.js";
+import MeasureTool from "../MeasureTool.js";
 export default class ContextMenu {
   constructor(viewer, cesiumId) {
     this.contextMenuItems = [];
@@ -27,11 +35,11 @@ export default class ContextMenu {
 
   //右击事件
   rightClickEvent() {
-    const handler = new Cesium.ScreenSpaceEventHandler(this.viewer.canvas);
-    handler.setInputAction((movement) => {
+    this.handler = new Cesium.ScreenSpaceEventHandler(this.viewer.canvas);
+    this.handler.setInputAction((movement) => {
       this.closeContextMenu();
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    handler.setInputAction((movement) => {
+    this.handler.setInputAction((movement) => {
       //获取鼠标点击位置
       this.clickScreenPosition = movement.position;
       this.setContextMenuPosition(this.clickScreenPosition);
@@ -132,6 +140,7 @@ export default class ContextMenu {
         content.addEventListener("click", (e) => {
           e.stopPropagation();
           node.callback();
+          this.closeContextMenu();
         });
       }
     }
@@ -153,11 +162,37 @@ export default class ContextMenu {
   }
   //默认菜单
   defaultContextMenu() {
+    let contextString = "";
     this.contextMenuItems = [
       {
         name: "查看当前视角",
         id: "currentView",
-        callback: () => {},
+        callback: () => {
+          const { lon, lat, height, heading, pitch, roll } = getCameraParams(
+            this.viewer
+          );
+          contextString = `{lon: ${lon.toFixed(6)}, lat: ${lat.toFixed(
+            6
+          )}, height: ${height.toFixed(6)}, heading: ${heading.toFixed(
+            6
+          )}, pitch: ${pitch.toFixed(6)}, roll: ${roll.toFixed(6)}}`;
+          copyContext(contextString);
+        },
+      },
+      {
+        name: "获取点击点的位置",
+        id: "getClickPosition",
+        callback: () => {
+          const { lng, lat, alt } = getCartesian3FromPX(
+            this.viewer,
+            this.clickScreenPosition
+          );
+          contextString = `lng: ${lng}, lat: ${lat}, height: ${alt}`;
+          copyContext(contextString);
+          // this.handler.setInputAction((movement) => {
+          //   this.closeContextMenu();
+          // }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        },
       },
       {
         name: "视角切换",
@@ -166,12 +201,22 @@ export default class ContextMenu {
           {
             name: "允许进入地下",
             id: "allowUnderground",
-            callback: () => {},
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
           },
           {
             name: "地形服务",
             id: "terrainService",
-            callback: () => {},
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
           },
           {
             name: "高级设置",
@@ -191,35 +236,158 @@ export default class ContextMenu {
       {
         name: "绕此处环绕飞行",
         id: "flyAround",
-        callback: () => {},
+        callback: () => {
+          ElMessage({
+            message: "正在开发中",
+            type: "warning",
+          });
+        },
       },
       {
         name: "图上量算",
         id: "measure",
         children: [
-          { name: "距离测量", id: "distanceMeasure", callback: () => {} },
-          { name: "面积测量", id: "areaMeasure", callback: () => {} },
-          { name: "高度测量", id: "heightMeasure", callback: () => {} },
-          { name: "线测量", id: "lineMeasure", callback: () => {} },
+          {
+            name: "空间距离",
+            id: "distanceMeasure",
+            callback: () => {
+              const measureTool = new MeasureTool(this.viewer);
+              measureTool.measureLineSpace(this.viewer);
+            },
+          },
+          {
+            name: "地表距离",
+            id: "areaMeasure",
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
+          },
+          {
+            name: "地表面积",
+            id: "heightMeasure",
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
+          },
+          {
+            name: "三角测量",
+            id: "lineMeasure",
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
+          },
+          {
+            name: "高度差",
+            id: "heightDifference",
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
+          },
+          {
+            name: "三角测量",
+            id: "triangleMeasure",
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
+          },
+          {
+            name: "清除结果",
+            id: "clearResult",
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
+          },
         ],
       },
       {
         name: "移动到此处",
         id: "moveToHere",
-        callback: () => {},
+        callback: () => {
+          ElMessage({
+            message: "正在开发中",
+            type: "warning",
+          });
+        },
       },
       {
-        name: "图上标记",
+        name: "地形服务",
         children: [
-          { name: "添加标记点", id: "addMarkPoint", callback: () => {} },
-          { name: "添加标记线", id: "addMarkLine", callback: () => {} },
-          { name: "添加标记区域", id: "addMarkArea", callback: () => {} },
+          {
+            name: "开启深度检测",
+            id: "depthTest",
+            callback: () => {
+              this.viewer.scene.globe.depthTestAgainstTerrain = true;
+            },
+          },
+          {
+            name: "关闭深度检测",
+            id: "closeDepthTest",
+            callback: () => {
+              this.viewer.scene.globe.depthTestAgainstTerrain = false;
+            },
+          },
+          {
+            name: "显示地形三角网",
+            id: "showTerrainTriangles",
+            callback: () => {
+              this.viewer.scene.globe._surface.tileProvider._debug.wireframe = true;
+            },
+          },
+          {
+            name: "隐藏地形三角网",
+            id: "hideTerrainTriangles",
+            callback: () => {
+              this.viewer.scene.globe._surface.tileProvider._debug.wireframe = false;
+            },
+          },
+          {
+            name: "显示地形",
+            id: "showTerrain",
+            callback: async () => {
+              this.viewer.terrainProvider =
+                await Cesium.createWorldTerrainAsync({
+                  requestVertexNormals: true, //请求地形照明数据
+                  requestWaterMsk: true, // 请求水体效果所需要的海岸线数据
+                });
+            },
+          },
+          {
+            name: "隐藏地形",
+            id: "hideTerrain",
+            callback: () => {
+              this.viewer.terrainProvider =
+                new Cesium.EllipsoidTerrainProvider();
+            },
+          },
         ],
       },
       {
         name: "第一视角站到此处",
         id: "firstView",
-        callback: () => {},
+        callback: () => {
+          ElMessage({
+            message: "正在开发中",
+            type: "warning",
+          });
+        },
       },
       {
         name: "特效效果",
@@ -230,17 +398,60 @@ export default class ContextMenu {
             id: "weatherEffect",
             callback: () => {
               console.log("object");
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
             },
           },
-          { name: "光照效果", id: "lightEffect", callback: () => {} },
-          { name: "时间效果", id: "timeEffect", callback: () => {} },
-          { name: "特效效果", id: "effectEffect", callback: () => {} },
+          {
+            name: "光照效果",
+            id: "lightEffect",
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
+          },
+          {
+            name: "时间效果",
+            id: "timeEffect",
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
+          },
+          {
+            name: "特效效果",
+            id: "effectEffect",
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
+          },
         ],
       },
       {
         name: "开启键盘漫游",
         id: "keyboardRoam",
-        callback: () => {},
+        callback: () => {
+          ElMessage({
+            message: "正在开发中",
+            type: "warning",
+          });
+        },
+      },
+      {
+        name: "场景出图",
+        id: "screenshot",
+        callback: () => {
+          getScreenshot(this.viewer);
+        },
       },
       {
         name: "场景设置",
@@ -251,7 +462,12 @@ export default class ContextMenu {
           {
             name: "坐标系设置",
             id: "coordinateSystemSetting",
-            callback: () => {},
+            callback: () => {
+              ElMessage({
+                message: "正在开发中",
+                type: "warning",
+              });
+            },
           },
         ],
       },

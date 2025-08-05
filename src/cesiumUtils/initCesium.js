@@ -28,11 +28,11 @@ const initCesium = async (id) => {
         shouldAnimate: true
     }
     const viewer = new Cesium.Viewer(id, {...baseConfig})
-    const terrainProvider = await Cesium.createWorldTerrainAsync({
-        requestVertexNormals: true, //请求地形照明数据
-        requestWaterMsk: true, // 请求水体效果所需要的海岸线数据
-    })
-    viewer.terrainProvider = terrainProvider;
+    // const terrainProvider = await Cesium.createWorldTerrainAsync({
+    //     requestVertexNormals: true, //请求地形照明数据
+    //     requestWaterMsk: true, // 请求水体效果所需要的海岸线数据
+    // })
+    // viewer.terrainProvider = terrainProvider;
     viewer.scene.globe.depthTestAgainstTerrain = true; // 启用深度测试，让地形后面的东西消失。
     // 去除版权信息
     viewer._cesiumWidget._creditContainer.style.display = "none"; // 隐藏版权
